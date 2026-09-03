@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/HC-kang/blackfin/raw/v0.1.0/schemas/evaluation.schema.json",
+  "title": "Blackfin Vigil Evaluation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "role",
+    "decision",
+    "acceptanceContract",
+    "revision",
+    "criteria",
+    "checks",
+    "blockers",
+    "summary"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "role": { "const": "VIGIL" },
+    "decision": { "enum": ["PASS", "FAIL", "BLOCKED"] },
+    "acceptanceContract": { "$ref": "#/$defs/artifactRef" },
+    "revision": { "$ref": "#/$defs/revision" },
+    "criteria": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/criterion" }
+    },
+    "checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/check" }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "summary": { "type": "string", "minLength": 1 }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["decision"],
+        "properties": { "decision": { "const": "PASS" } }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "allOf": [
+                { "$ref": "#/$defs/criterion" },
+                {
+                  "if": {
+                    "type": "object",
+                    "required": ["mandatory"],
+                    "properties": { "mandatory": { "const": true } }
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": { "status": { "const": "PASS" } }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["decision"],
+        "properties": { "decision": { "const": "FAIL" } }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "criteria": {
+            "type": "array",
+            "contains": {
+              "type": "object",
+              "required": ["mandatory", "status"],
+              "properties": {
+                "mandatory": { "const": true },
+                "status": { "const": "FAIL" }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["decision"],
+        "properties": { "decision": { "const": "BLOCKED" } }
+      },
+      "then": {
+        "type": "object",
+        "required": ["blockers"],
+        "properties": {
+          "blockers": { "type": "array", "minItems": 1 }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "sha256"],
+      "properties": {
+        "location": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["head", "worktreeState"],
+      "properties": {
+        "head": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "worktreeState": { "enum": ["CLEAN", "DIRTY"] },
+        "checkpoint": {
+          "type": "string",
+          "pattern": "^blackfin-checkpoint-v1:sha256:[0-9a-f]{64}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["worktreeState"],
+            "properties": { "worktreeState": { "const": "DIRTY" } }
+          },
+          "then": {
+            "type": "object",
+            "required": ["checkpoint"],
+            "properties": { "checkpoint": {} }
+          },
+          "else": {
+            "type": "object",
+            "not": {
+              "type": "object",
+              "required": ["checkpoint"],
+              "properties": { "checkpoint": {} }
+            }
+          }
+        }
+      ]
+    },
+    "criterion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "mandatory", "status", "evidence"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^AC-[1-9][0-9]*$" },
+        "mandatory": { "type": "boolean" },
+        "status": { "enum": ["PASS", "FAIL", "BLOCKED"] },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "reproduction": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["status"],
+            "properties": { "status": { "const": "FAIL" } }
+          },
+          "then": {
+            "type": "object",
+            "required": ["reproduction"],
+            "properties": { "reproduction": {} }
+          }
+        }
+      ]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "result"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "result": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

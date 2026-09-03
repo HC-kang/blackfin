@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/HC-kang/blackfin/raw/v0.1.0/schemas/generator-handoff.schema.json",
+  "title": "Blackfin Forge Handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "role",
+    "status",
+    "acceptanceContract",
+    "revision",
+    "changedFiles",
+    "checks",
+    "criteriaClaimed",
+    "knownRisks",
+    "uncertainties",
+    "blockers"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "0.1.0" },
+    "role": { "const": "FORGE" },
+    "status": { "enum": ["READY_FOR_EVALUATION", "BLOCKED"] },
+    "acceptanceContract": { "$ref": "#/$defs/artifactRef" },
+    "revision": { "$ref": "#/$defs/revision" },
+    "changedFiles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "checks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/check" }
+    },
+    "criteriaClaimed": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^AC-[1-9][0-9]*$" }
+    },
+    "knownRisks": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "uncertainties": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["status"],
+        "properties": { "status": { "const": "READY_FOR_EVALUATION" } }
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "checks": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "allOf": [
+                { "$ref": "#/$defs/check" },
+                {
+                  "type": "object",
+                  "properties": { "result": { "const": "PASS" } }
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": ["status"],
+        "properties": { "status": { "const": "BLOCKED" } }
+      },
+      "then": {
+        "type": "object",
+        "properties": { "blockers": { "type": "array", "minItems": 1 } }
+      }
+    }
+  ],
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["location", "sha256"],
+      "properties": {
+        "location": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["head", "worktreeState"],
+      "properties": {
+        "head": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "worktreeState": { "enum": ["CLEAN", "DIRTY"] },
+        "checkpoint": {
+          "type": "string",
+          "pattern": "^blackfin-checkpoint-v1:sha256:[0-9a-f]{64}$"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["worktreeState"],
+            "properties": { "worktreeState": { "const": "DIRTY" } }
+          },
+          "then": {
+            "type": "object",
+            "required": ["checkpoint"],
+            "properties": { "checkpoint": {} }
+          },
+          "else": {
+            "type": "object",
+            "not": {
+              "type": "object",
+              "required": ["checkpoint"],
+              "properties": { "checkpoint": {} }
+            }
+          }
+        }
+      ]
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command", "result"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "result": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
