@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/HC-kang/blackfin/raw/v0.1.0/schemas/evaluation.schema.json",
+  "$id": "https://github.com/HC-kang/blackfin/raw/v0.2.0/schemas/evaluation.schema.json",
   "title": "Blackfin Vigil Evaluation",
   "type": "object",
   "additionalProperties": false,
@@ -16,7 +16,7 @@
     "summary"
   ],
   "properties": {
-    "schemaVersion": { "const": "0.1.0" },
+    "schemaVersion": { "const": "0.2.0" },
     "role": { "const": "VIGIL" },
     "decision": { "enum": ["PASS", "FAIL", "BLOCKED"] },
     "acceptanceContract": { "$ref": "#/$defs/artifactRef" },

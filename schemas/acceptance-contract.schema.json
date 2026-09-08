@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/HC-kang/blackfin/raw/v0.1.0/schemas/acceptance-contract.schema.json",
+  "$id": "https://github.com/HC-kang/blackfin/raw/v0.2.0/schemas/acceptance-contract.schema.json",
   "title": "Blackfin Acceptance Contract",
   "type": "object",
   "additionalProperties": false,
@@ -9,17 +9,14 @@
     "objective",
     "taskClass",
     "requiredBehaviors",
-    "constraints",
-    "assumptions",
-    "unknowns",
     "verification",
     "humanApprovalRequired"
   ],
   "properties": {
-    "schemaVersion": { "const": "0.1.0" },
+    "schemaVersion": { "const": "0.2.0" },
     "objective": { "type": "string", "minLength": 1 },
     "taskClass": {
-      "enum": ["TRIVIAL", "NORMAL", "HIGH_UNCERTAINTY", "HIGH_RISK"]
+      "enum": ["NORMAL", "HIGH_UNCERTAINTY", "HIGH_RISK"]
     },
     "requiredBehaviors": {
       "type": "array",
@@ -45,6 +42,19 @@
     },
     "humanApprovalRequired": { "type": "boolean" }
   },
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "required": ["taskClass"],
+        "properties": { "taskClass": { "const": "HIGH_RISK" } }
+      },
+      "then": {
+        "type": "object",
+        "properties": { "humanApprovalRequired": { "const": true } }
+      }
+    }
+  ],
   "$defs": {
     "behavior": {
       "type": "object",

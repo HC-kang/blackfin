@@ -1,23 +1,16 @@
 # Task classification
 
-Choose the highest class whose signals apply. Classification controls ceremony, not implementation style.
+The coordinator chooses the highest applicable class from repository evidence. Model capability alone never lowers risk.
 
-The orchestrator owns routing classification. Atlas confirms it after repository inspection and reports evidence that requires escalation to a higher class; Atlas does not silently change the active route.
-
-| Class | Signals | Required route |
+| Class | Signals | Route |
 | --- | --- | --- |
-| `TRIVIAL` | Typo, comment-only update, obvious static rename | Forge -> deterministic checks -> orchestrator completion |
-| `NORMAL` | Business logic, endpoint, UI behavior, bounded bug with understood cause | Atlas -> Forge -> gates -> Vigil |
-| `HIGH_UNCERTAINTY` | Unknown production bug, unclear root cause, performance regression, concurrency | Atlas plus bounded investigation when useful -> Forge -> gates -> Vigil |
-| `HIGH_RISK` | Authentication, authorization, payment, migration, destructive data, security boundary, production infrastructure | Atlas -> optional investigation -> Forge -> gates -> Vigil -> human approval |
+| `TRIVIAL` | Exact wording, comments, static renames; no behavioral effect | Direct edit -> diff and applicable checks |
+| `NORMAL` | Bounded behavior with understood scope and verification | Coordinator contract -> Forge -> gates -> fresh Vigil |
+| `HIGH_UNCERTAINTY` | Unknown root cause, unclear performance/concurrency behavior | Atlas + bounded diagnosis -> Forge -> gates -> fresh Vigil |
+| `HIGH_RISK` | Auth, payment, migration, destructive data, shared-state concurrency, security, production infrastructure | Atlas -> Forge -> gates -> fresh Vigil -> human approval |
 
-## Classification checks
+For `NORMAL`, the coordinator can use the Atlas authoring card/schema without a planner worker. Add Atlas when scope or verification needs material investigation. A focused existing test helps establish evidence, but does not by itself prove coverage or authorize skipping Vigil.
 
-- Assumption -> what breaks if false -> mitigation.
-- Partial failure or retry -> data or state consequence -> recovery path.
-- Missing runtime, credentials, fixtures, or observability -> whether meaningful verification remains possible.
-- Migration or destructive action -> rollback and human approval.
+`TRIVIAL` excludes runtime, interface, data, dependency, configuration, generated-output, and security effects. Any ambiguity is at least `NORMAL`; trivial work needs neither role workers nor JSON/checkpoint artifacts.
 
-Do not create multiple agents merely because a task is non-trivial. Independent investigators are useful only for distinct hypotheses or evidence sources. Prefer the smallest route that preserves the required independence and risk controls.
-
-`TRIVIAL` is limited to wording, comment-only changes, and obvious static renames with no runtime, interface, data, dependency, configuration, generated-output, or security effect. Any ambiguity is at least `NORMAL`. The trivial route uses the exact human request and gate evidence; every other class requires an Acceptance Contract and Forge handoff.
+Cap uncertain investigation by time or worker count. Use parallel workers only for distinct hypotheses or independent evidence sources. A missing requirement or environment may block the run before Forge; do not implement a guessed solution.

@@ -1,56 +1,29 @@
-# Orchestrator runbook
+# Runbook
 
-## Classification
+## Route and ownership
 
-| Class | Typical signals | Route |
-| --- | --- | --- |
-| `TRIVIAL` | Typo, comment, obvious static rename | Forge -> gates -> orchestrator completion |
-| `NORMAL` | Business logic, endpoint, or UI behavior | Atlas -> Forge -> gates -> Vigil |
-| `HIGH_UNCERTAINTY` | Unknown root cause, performance, concurrency | Atlas + bounded investigation -> Forge -> gates -> Vigil |
-| `HIGH_RISK` | Auth, payment, migration, destructive data, security, production infrastructure | Atlas -> optional investigation -> Forge -> gates -> Vigil -> human |
+Use `TRIVIAL` only for exact wording, comments, or static renames with no runtime, interface, data, dependency, configuration, generated-output, or security effect. The current agent may complete it directly; inspect the diff and run applicable checks. No separate acceptance role, JSON, or checkpoint tool is required.
 
-Choose the highest applicable class. Keep investigations bounded and use independent workers only when distinct hypotheses justify them.
+For clear `NORMAL` work, the human or coordinator owns the contract; author it with the Atlas skill's schema/card without starting a planner worker. Forge and Vigil still use separate contexts. Add Atlas when scope or verification needs investigation. `HIGH_UNCERTAINTY` requires Atlas and bounded diagnosis; `HIGH_RISK` (auth, payment, migration, destructive data, shared-state concurrency, security, production infrastructure) requires Atlas and human approval. Highest applicable class wins.
 
-`TRIVIAL` is limited to wording, comment-only changes, and obvious static renames with no runtime, interface, data, dependency, configuration, generated-output, or security effect. Any uncertainty is at least `NORMAL`. Every class except `TRIVIAL` uses an Acceptance Contract and Forge handoff.
+All non-trivial routes use a validated contract, revision-bound Forge handoff, and Vigil evaluation. Use all role assets from one release and pass absolute paths or artifact IDs. Each criterion ID must occur once in the contract, verification mapping, and evaluation, with unchanged mandatory flags. Only the human or designated contract owner can issue an explicit replacement; it invalidates prior evaluation.
 
-The orchestrator owns the route. Atlas may return evidence that requires reclassification. For an investigation, the orchestrator names the distinct hypotheses, caps the worker count or time, and asks Atlas to synthesize evidence before Forge starts.
+## Gates, repairs, acceptance
 
-## Artifact boundary
+Freeze mandatory gate commands before Forge. Forge may add optional diagnostics but cannot omit or demote a frozen gate. Record command, exit result, relevant environment, and revision. The coordinator must inspect runner-observed output at that exact state, or execute the frozen gates itself if only Forge's summary is available. Reusing trustworthy execution evidence avoids a duplicate suite; trusting an agent's PASS label does not.
 
-- Atlas -> Acceptance Contract
-- Forge -> exact repository revision plus Forge handoff
-- Vigil -> evaluation with criterion-level evidence
-- FAIL -> evaluation artifact back to Forge
-- Gate failure -> failed command and observed output back to Forge; no evaluation artifact is fabricated
+Do not broaden passing checks without new evidence. Vigil independently probes contract behavior rather than mechanically running the full suite again. Optional failed/unrun diagnostics stay visible; a diagnostic that contradicts a mandatory criterion blocks READY regardless of its label.
 
-Do not silently revise the contract during a repair. Contract changes return to Atlas or the human and must be explicit.
+Persist the consumed repair count. Every failed mandatory gate or Vigil FAIL sent back to implementation consumes one cycle, even with session reuse; default two after the initial attempt. Return the unchanged contract and failure evidence. Missing environment/authority or contradictory requirements are BLOCKED, not an automatic repair loop. Cap investigations by time or worker count before starting them.
 
-Across worktrees, pass artifacts by absolute shared path or artifact ID; relative uncommitted files do not follow a newly created worktree.
+Verify the handoff state again after Vigil: CLEAN requires matching HEAD and empty checkpoint-tool `changedFiles`; DIRTY requires matching HEAD and canonical checkpoint. PASS stops iteration. If approval is required, record `PENDING_HUMAN_APPROVAL` bound to contract/evaluation digests and revision. Before shipping, reverify that state and record the approving actor/time; an older approval cannot approve a changed result.
 
-Persist contract and handoff digests plus the consumed repair count so an interrupted run can resume without resetting its limits.
+## Execution
 
-Before Forge dispatch, persist the mandatory gate command set from repository instructions plus deterministic checks required by the contract. Forge may add checks but cannot remove this set. The orchestrator, not Forge, executes the frozen set before Vigil or trivial completion.
+Reuse the existing task worktree; create another only for conflicting writes or requested isolation. Evaluate Forge's resulting state, not a divergent copy. Worktrees do not isolate host credentials or network permissions.
 
-Every transition from a failed mandatory gate or Vigil `FAIL` back to implementation consumes one repair cycle, whether Forge is reused or newly dispatched. The default permits two repair cycles after the initial implementation. Persist and check the count before authorizing more edits.
+When supervising workers through Orca, load its current `orchestration` guide once in the coordinator. Load `orca-cli` only for additional Orca operations. Workers use injected lifecycle commands without loading whole guides. Verify task/dispatch provenance and release settled workers under that guide.
 
-A gate-failure repair receives the unchanged contract plus failed command and output. A Vigil-failure repair receives the unchanged contract plus evaluation artifact.
+Before substantive dispatch, check model/effort selection, workspace trust, and access to required artifacts, commands, runtime, and lifecycle reporting. Inspect launch receipts; do not infer progress from a started process or bypass permission prompts. If a worker cannot report completion, inspect its evidence and record explicit coordinator recovery, never impersonate a worker result.
 
-A Vigil `PASS` ends agent iteration. If the contract or route requires approval, record `PENDING_HUMAN_APPROVAL` with the contract digest, evaluation digest, HEAD, and checkpoint when dirty. Reverify that exact state immediately before recording the approving actor and time; stale approval cannot complete a changed revision. If no durable approval record is available, do not mark the run complete.
-
-For `TRIVIAL`, record the starting HEAD and checkpoint before Forge. Completion requires the orchestrator to inspect the baseline-to-result diff and independently rerun the frozen gates; Forge's report alone is not acceptance evidence.
-
-## Orca boundary
-
-Use Orca orchestration only for supervised coordination. The orchestrator resolves the executable, loads `orca skills get orca-cli` and `orca skills get orchestration`, and follows their current task/worker lifecycle. It includes the minimal current heartbeat, completion, question, and escalation commands in each dispatch. Role workers must not load both full guides solely to complete that lifecycle; they load them only if they must operate additional Orca state directly.
-
-Resolve all role assets from one Blackfin release, reject unsupported artifact `schemaVersion` values, and pass absolute installed paths for each role's schema and Forge/Vigil checkpoint tool. After Vigil settles, independently verify the handoff: DIRTY requires matching `HEAD` and checkpoint; CLEAN requires matching `HEAD` and empty tool `changedFiles`.
-
-The orchestrator specifies material runtime prerequisites in each dispatch. Forge records the environment it actually used in check evidence; Vigil establishes its environment independently and does the same. Missing material environment evidence is `BLOCKED`.
-
-Use a fresh agent context for Vigil. Release or explicitly retain every settled worker as directed by the current Orca guide.
-
-Without Orca, a runner may execute the same route only if it can create separate role contexts and persist the same artifacts and attempt count. If it cannot provide a fresh independent Vigil context, a route requiring Vigil is `BLOCKED`; do not replace independence with hidden conversation.
-
-Checkpoint worktree comments at meaningful state changes: planning complete, implementation complete, deterministic gates passed, evaluation failed or passed, and blocked. Keep comments evidence-oriented.
-
-Do not treat worktree isolation as a security sandbox. Configure filesystem, network, cloud, Docker, and other credentials independently.
+Use provider-independent roles and the lowest sufficient effort; frontier models need not fill every role. A stronger model does not waive independent evaluation. Report effective model selection or fallback when observable. Without Orca, use another runner only if it preserves artifacts, attempt counts, and a fresh Vigil context.

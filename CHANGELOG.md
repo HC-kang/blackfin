@@ -2,6 +2,16 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.2.0] - 2026-09-08
+
+- Fix checkpoint creation when the reserved `.blackfin/` artifact directory is gitignored; preserve the checkpoint format and cover ignored artifacts, deletions, and literal filenames.
+
+- Clear normal work uses a coordinator-authored contract; a separate Atlas session is reserved for ambiguity and higher-risk work. Trivial edits complete directly without role workers or JSON/checkpoint ceremony.
+- Reuse task worktrees and runner-observed gate evidence at the exact revision. Vigil retains independent contract probes without mandatory duplicate full-suite runs.
+- Shorten role entrypoints; load Orca guides only for operations actually needed. Preflight provider startup, artifact access, and lifecycle permissions without bypassing trust prompts.
+- Handoff checks explicitly distinguish mandatory gates from optional diagnostics. Optional failures remain reportable without hiding mandatory failures; high-risk contracts enforce human approval.
+- Artifact schemas advance to 0.2.0; omit empty optional contract/handoff metadata. v0.1 artifacts require their original assets or an explicit replacement contract. Checkpoint v1 is unchanged.
+
 ## [0.1.0] - 2026-09-03
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/HC-kang/blackfin/raw/v0.1.0/schemas/generator-handoff.schema.json",
+  "$id": "https://github.com/HC-kang/blackfin/raw/v0.2.0/schemas/generator-handoff.schema.json",
   "title": "Blackfin Forge Handoff",
   "type": "object",
   "additionalProperties": false,
@@ -12,13 +12,10 @@
     "revision",
     "changedFiles",
     "checks",
-    "criteriaClaimed",
-    "knownRisks",
-    "uncertainties",
     "blockers"
   ],
   "properties": {
-    "schemaVersion": { "const": "0.1.0" },
+    "schemaVersion": { "const": "0.2.0" },
     "role": { "const": "FORGE" },
     "status": { "enum": ["READY_FOR_EVALUATION", "BLOCKED"] },
     "acceptanceContract": { "$ref": "#/$defs/artifactRef" },
@@ -63,16 +60,32 @@
           "checks": {
             "type": "array",
             "minItems": 1,
+            "contains": {
+              "type": "object",
+              "required": ["mandatory", "result"],
+              "properties": {
+                "mandatory": { "const": true },
+                "result": { "const": "PASS" }
+              }
+            },
             "items": {
               "allOf": [
                 { "$ref": "#/$defs/check" },
                 {
-                  "type": "object",
-                  "properties": { "result": { "const": "PASS" } }
+                  "if": {
+                    "type": "object",
+                    "required": ["mandatory"],
+                    "properties": { "mandatory": { "const": true } }
+                  },
+                  "then": {
+                    "type": "object",
+                    "properties": { "result": { "const": "PASS" } }
+                  }
                 }
               ]
             }
-          }
+          },
+          "blockers": { "type": "array", "maxItems": 0 }
         }
       }
     },
@@ -139,12 +152,27 @@
     "check": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["command", "result"],
+      "required": ["command", "result", "mandatory"],
       "properties": {
         "command": { "type": "string", "minLength": 1 },
+        "mandatory": { "type": "boolean" },
         "result": { "enum": ["PASS", "FAIL", "NOT_RUN"] },
         "evidence": { "type": "string", "minLength": 1 }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["mandatory"],
+            "properties": { "mandatory": { "const": false } }
+          },
+          "then": {
+            "type": "object",
+            "required": ["evidence"],
+            "properties": { "evidence": {} }
+          }
+        }
+      ]
     }
   }
 }

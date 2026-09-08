@@ -1,71 +1,23 @@
 # Handoff protocol
 
-Blackfin handoffs are standalone artifacts tied to exact repository state. Conversation history is optional and must not be required for correctness.
+Every non-trivial run passes validated, standalone artifacts from one Blackfin release:
 
-The contract reference in each handoff contains its location or artifact ID plus a SHA-256 digest. Recompute the digest before use; a mismatch blocks the run instead of silently changing acceptance criteria.
+1. Human or Atlas/coordinator -> Acceptance Contract.
+2. Forge -> unchanged contract reference, exact revision, diff, check evidence, and Forge handoff.
+3. Fresh Vigil -> criterion-level evaluation; FAIL returns to Forge, PASS stops automation, BLOCKED escalates.
 
-## Artifact flow
+Use absolute shared paths or artifact IDs across worktrees. Run artifacts belong under reserved `.blackfin/` or outside the implementation tree. Relative uncommitted files do not follow new worktrees.
 
-```text
-Acceptance Contract
-        |
-        v
-Forge + repository instructions
-        |
-        v
-revision + Forge handoff
-        |
-        v
-Vigil + diff + runtime
-        |
-   FAIL | PASS
-        |   `-> stop automation; human review if configured
-        `----> Forge repair
-```
+Contract references bind location and SHA-256. Recompute before use; only the human or designated contract owner may issue an explicit replacement, invalidating old evaluations. Verify unique criterion IDs, one verification mapping each, and one evaluation result each with unchanged mandatory flags.
 
-The runner chooses storage. A useful run-directory convention is:
+Forge's [handoff schema](../schemas/generator-handoff.schema.json) requires passing mandatory gates for READY. All checks declare `mandatory`; optional failed/unrun diagnostics require explanatory evidence and cannot conceal a failure of mandatory acceptance. The coordinator verifies actual execution evidence as defined in [evidence policy](evidence-policy.md).
 
-```text
-<run-directory>/acceptance-contract.json
-<run-directory>/forge-handoff.<attempt>.json
-<run-directory>/evaluation.<attempt>.json
-```
+For CLEAN revisions, the checkpoint tool must report matching HEAD and no changed files; omit the checkpoint field. For DIRTY revisions, use the canonical [checkpoint](checkpoint.md). Vigil verifies state before and after evaluation, and the coordinator rechecks before acceptance. Different source state makes the result stale.
 
-Do not require this path layout when an orchestrator provides equivalent artifact IDs.
-When roles run in different worktrees, use absolute shared paths or artifact IDs. An uncommitted relative file does not appear in a newly created worktree.
+Validate [Vigil's evaluation](../schemas/evaluation.schema.json). PASS requires all mandatory criteria and their evidence; FAIL includes reproduction; BLOCKED names the missing prerequisite. Forge may not accept its own behavioral changes and Vigil may not repair implementation.
 
-## Atlas to Forge
+Persist artifacts and the consumed repair count. Every failed-gate or Vigil-FAIL transition back to implementation consumes one cycle, default two after the initial attempt; session reuse or interruption does not reset it. Gate failure returns command/output without fabricating a Vigil report. Contract replacement invalidates prior evidence and cannot silently reset the repair budget.
 
-Pass the validated Acceptance Contract and repository state. Do not require Atlas's hidden reasoning. Forge may report a blocking contradiction but cannot rewrite the contract.
+If approval is required, record PENDING_HUMAN_APPROVAL with contract/evaluation digests and revision. Recheck the exact state before recording actor/time and shipping. A human rejection with unchanged acceptance uses a counted repair; changed requirements require an explicit replacement contract.
 
-## Forge to Vigil
-
-This structured handoff is required for every non-trivial route. `TRIVIAL` instead returns changed files and frozen gate results directly to the orchestrator; any behavioral interpretation upgrades the route to `NORMAL`.
-
-Pass:
-
-- the unchanged Acceptance Contract;
-- the exact revision, including relevant uncommitted worktree state;
-- the complete diff;
-- the Forge handoff validated by [`../schemas/generator-handoff.schema.json`](../schemas/generator-handoff.schema.json);
-- access to the relevant runtime or test environment.
-
-`READY_FOR_EVALUATION` requires mandatory deterministic gates to pass. Otherwise return to Forge or emit `BLOCKED`.
-
-For a clean worktree, `checkpoint` must be absent; Forge and Vigil run the checkpoint tool and require matching `HEAD` plus empty `changedFiles`. For a dirty worktree, use the canonical [`checkpoint`](checkpoint.md), which covers tracked and non-ignored untracked state outside reserved `.blackfin/`. Vigil confirms it before and after evaluation.
-
-## Vigil to Forge or human
-
-Validate Vigil output with [`../schemas/evaluation.schema.json`](../schemas/evaluation.schema.json).
-
-- `FAIL`: return criterion-level evidence and the smallest reliable reproduction to Forge. Keep the contract unchanged.
-- `PASS`: terminate automated iteration and request human review when the contract or run configuration requires it.
-- `BLOCKED`: escalate the missing prerequisite or contract defect.
-
-The orchestrator must enforce its repair-cycle limit. The default is two cycles after the initial Forge implementation; limit exhaustion escalates rather than silently accepting or looping forever.
-
-Every transition from a failed mandatory gate or Vigil `FAIL` back to implementation consumes one repair cycle, even when the same Forge session continues. Persist artifacts and the consumed count so an interrupted run resumes from the last validated transition rather than resetting its limit.
-
-Gate-failure repair input is the unchanged contract plus failed command and observed output; do not fabricate a Vigil evaluation. Vigil-failure repair input is the unchanged contract plus evaluation artifact.
-
-If a human rejects a PASS without changing the contract, route the evidence to a counted Forge repair. If the requested behavior changes, return to Atlas for an explicit replacement contract and invalidate the prior evaluation.
+TRIVIAL work uses the exact human request, direct diff inspection, and applicable checks; no structured handoff is required.

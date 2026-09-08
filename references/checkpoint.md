@@ -17,7 +17,7 @@ blackfin-checkpoint-v1:sha256:<digest>
 
 The SHA-256 input is the protocol name, `HEAD` object ID, and generated Git tree object ID in that order. Each ASCII value is preceded by its byte length as an unsigned eight-byte big-endian integer. The shipped `blackfin-checkpoint-v1` script is authoritative. Git provides the canonical handling of paths, file modes, executable bits, symlinks, deletions, and repository object format. `changedFiles` is Git's no-renames recursive name diff from `HEAD` to the generated tree.
 
-`.blackfin/` is reserved for run artifacts and excluded from the generated tree. Ignored untracked files are also excluded. Do not put implementation source changes in either location. The checkpoint binds source state, not runtime credentials, caches, or generated environments; Forge records relevant environment prerequisites separately and Vigil establishes or verifies them independently.
+`.blackfin/` is reserved for run artifacts: its working changes and untracked files are excluded, while any previously committed content remains as recorded in `HEAD`. Ignored untracked files are also excluded. Do not put implementation source changes in either location. The checkpoint binds source state, not runtime credentials, caches, or generated environments; Forge records relevant environment prerequisites separately and Vigil establishes or verifies them independently.
 
 Clean, initialized submodules are represented by their Gitlink commit. The tool rejects uninitialized or dirty submodules because a superproject tree cannot capture their full working state.
 

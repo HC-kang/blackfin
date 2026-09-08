@@ -22,13 +22,14 @@ def clean_git_env():
     return env
 
 
-def git(repo: Path, *args: str, env=None) -> bytes:
+def git(repo: Path, *args: str, env=None, input=None) -> bytes:
     return subprocess.run(
         ["git", "-C", os.fspath(repo), *args],
         check=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         env=env or clean_git_env(),
+        input=input,
     ).stdout
 
 
@@ -58,16 +59,23 @@ def checkpoint(repo: Path):
         env = clean_git_env()
         env["GIT_INDEX_FILE"] = os.fspath(index)
         git(root, "read-tree", "HEAD", env=env)
-        git(
+        paths = git(
             root,
-            "add",
-            "-A",
+            "ls-files",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+            "-z",
             "--",
             ".",
             ":(exclude).blackfin",
             ":(exclude).blackfin/**",
             env=env,
         )
+        if paths:
+            # Explicit ignored exclusions can make git add fail; enumerate eligible paths first.
+            git(root, "--literal-pathspecs", "add", "-A", "--pathspec-from-file=-",
+                "--pathspec-file-nul", env=env, input=paths)
         reject_dirty_submodules(root, env)
         tree = git(root, "write-tree", env=env).strip().decode("ascii")
         changed = git(

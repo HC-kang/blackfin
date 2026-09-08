@@ -46,6 +46,18 @@ class BlackfinTest(unittest.TestCase):
             failed = run(sys.executable, CHECKPOINT, "--repo", repo, "--verify", dirty["checkpoint"], cwd=repo, check=False)
             self.assertEqual(1, failed.returncode)
 
+            # A normal ignored artifact directory must not prevent checkpoint creation.
+            (repo / ".gitignore").write_text(".blackfin/\nignored.tmp\n")
+            (repo / "ignored.tmp").write_text("not source")
+            (repo / "[literal].txt").write_text("literal pathspec")
+            (repo / "tracked.txt").unlink()
+            ignored = self.checkpoint(repo)
+            self.assertEqual([".gitignore", "[literal].txt", "tracked.txt", "untracked.txt"], ignored["changedFiles"])
+            (repo / ".blackfin" / "handoff.json").write_text("ignored evidence")
+            (repo / "ignored.tmp").write_text("new cache")
+            self.assertEqual(ignored, self.checkpoint(repo))
+            self.assertEqual("", run("git", "diff", "--cached", cwd=repo).stdout)
+
     def checkpoint(self, repo):
         output = run(sys.executable, CHECKPOINT, "--repo", repo, "--json", cwd=repo).stdout
         return json.loads(output)
@@ -80,7 +92,7 @@ class BlackfinTest(unittest.TestCase):
             json.loads(path.read_text())
 
         contract = {
-            "schemaVersion": "0.1.0",
+            "schemaVersion": "0.2.0",
             "objective": "Keep one result",
             "taskClass": "NORMAL",
             "requiredBehaviors": [{"id": "AC-1", "description": "One result", "mandatory": True}],
@@ -91,6 +103,16 @@ class BlackfinTest(unittest.TestCase):
             "humanApprovalRequired": False,
         }
         self.assertSchema("acceptance-contract", contract)
+        minimal = copy.deepcopy(contract)
+        for field in ("constraints", "assumptions", "unknowns"):
+            minimal.pop(field)
+        self.assertSchema("acceptance-contract", minimal)
+        high_risk = dict(minimal, taskClass="HIGH_RISK")
+        self.assertSchema("acceptance-contract", high_risk, valid=False)
+        high_risk["humanApprovalRequired"] = True
+        self.assertSchema("acceptance-contract", high_risk)
+        self.assertSchema("acceptance-contract", dict(minimal, taskClass="TRIVIAL"), valid=False)
+        self.assertSchema("acceptance-contract", dict(minimal, schemaVersion="0.1.0"), valid=False)
 
         revision = {
             "head": "b" * 40,
@@ -98,19 +120,42 @@ class BlackfinTest(unittest.TestCase):
             "checkpoint": "blackfin-checkpoint-v1:sha256:" + "c" * 64,
         }
         handoff = {
-            "schemaVersion": "0.1.0",
+            "schemaVersion": "0.2.0",
             "role": "FORGE",
             "status": "READY_FOR_EVALUATION",
             "acceptanceContract": {"location": "contract.json", "sha256": "a" * 64},
             "revision": revision,
             "changedFiles": ["src/example.py"],
-            "checks": [{"command": "test", "result": "PASS"}],
+            "checks": [{"command": "test", "result": "PASS", "mandatory": True}],
             "criteriaClaimed": ["AC-1"],
             "knownRisks": [],
             "uncertainties": [],
             "blockers": [],
         }
         self.assertSchema("generator-handoff", handoff)
+        optional = copy.deepcopy(handoff)
+        for field in ("criteriaClaimed", "knownRisks", "uncertainties"):
+            optional.pop(field)
+        optional["checks"].extend([
+            {"command": "optional probe", "result": "FAIL", "mandatory": False, "evidence": "Unrelated optional diagnostic failed"},
+            {"command": "optional environment", "result": "NOT_RUN", "mandatory": False, "evidence": "Optional environment unavailable"},
+        ])
+        self.assertSchema("generator-handoff", optional)
+        bad_optional = copy.deepcopy(optional)
+        del bad_optional["checks"][1]["evidence"]
+        self.assertSchema("generator-handoff", bad_optional, valid=False)
+        only_optional = copy.deepcopy(optional)
+        only_optional["checks"] = only_optional["checks"][1:]
+        self.assertSchema("generator-handoff", only_optional, valid=False)
+        for result in ("FAIL", "NOT_RUN"):
+            bad_gate = copy.deepcopy(optional)
+            bad_gate["checks"][0]["result"] = result
+            self.assertSchema("generator-handoff", bad_gate, valid=False)
+        blocked_ready = dict(optional, blockers=["Missing required environment"])
+        self.assertSchema("generator-handoff", blocked_ready, valid=False)
+        missing_flag = copy.deepcopy(handoff)
+        del missing_flag["checks"][0]["mandatory"]
+        self.assertSchema("generator-handoff", missing_flag, valid=False)
         bad = copy.deepcopy(handoff)
         bad["checks"][0]["result"] = "FAIL"
         self.assertSchema("generator-handoff", bad, valid=False)
@@ -119,7 +164,7 @@ class BlackfinTest(unittest.TestCase):
         self.assertSchema("generator-handoff", bad, valid=False)
 
         evaluation = {
-            "schemaVersion": "0.1.0",
+            "schemaVersion": "0.2.0",
             "role": "VIGIL",
             "decision": "FAIL",
             "acceptanceContract": handoff["acceptanceContract"],

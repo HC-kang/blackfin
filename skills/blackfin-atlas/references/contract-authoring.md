@@ -4,7 +4,7 @@ Use JSON with these fields:
 
 ```json
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.2.0",
   "objective": "Prevent duplicate refresh-token rotation",
   "taskClass": "HIGH_RISK",
   "requiredBehaviors": [
@@ -25,7 +25,6 @@ Use JSON with these fields:
       "mitigation": "Escalate the storage boundary before implementation"
     }
   ],
-  "unknowns": [],
   "verification": [
     {
       "criterion": "AC-1",
@@ -44,7 +43,8 @@ Rules:
 - Every mandatory behavior needs verification.
 - An assumption states what must be true, what breaks if false, and the mitigation.
 - Put repository facts in repository instructions, not in a reusable Blackfin contract template.
-- Once handed to Forge, only Atlas or the human may revise the contract. Revisions start a new, explicit contract version or run attempt.
+- For clear NORMAL work, the coordinator may author this contract without a planner worker. Only the human or designated Atlas/coordinator may explicitly replace it; Forge cannot. Replacement invalidates earlier evaluations and does not reset the repair budget.
+- Omit empty constraints, assumptions, or unknowns. High-risk contracts require human approval.
 - Criterion IDs must be unique. Every required behavior ID must equal exactly one `verification[].criterion` value, with no extra verification IDs.
 
 Validate the complete artifact with the schema shipped beside this card. One tested command is:
