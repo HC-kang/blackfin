@@ -6,7 +6,7 @@ The handoff shape is:
 
 ```json
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.2.0",
   "role": "FORGE",
   "status": "READY_FOR_EVALUATION",
   "acceptanceContract": {
@@ -22,23 +22,22 @@ The handoff shape is:
   "checks": [
     {
       "command": "<repository test command>",
+      "mandatory": true,
       "result": "PASS",
       "evidence": "<concise observed output>"
     }
   ],
-  "criteriaClaimed": ["AC-1"],
-  "knownRisks": [],
-  "uncertainties": [],
   "blockers": []
 }
 ```
 
 Rules:
 
-- `criteriaClaimed` is navigation metadata, not proof.
+- Optional `criteriaClaimed`, `knownRisks`, and `uncertainties` can be omitted when empty. Claims are navigation metadata, not proof.
 - Recompute the contract digest before work and handoff; a mismatch is a blocker.
 - `revision.head` is the Git object ID. Run `python3 <skill-directory>/scripts/blackfin_checkpoint.py --repo <worktree> --json` after the final diff and gates. For `CLEAN`, require matching `head` plus empty tool `changedFiles` and omit `checkpoint`. For `DIRTY`, copy the tool's `checkpoint`, `head`, and exact `changedFiles` values into the handoff.
-- Record failed or unrun checks honestly. `READY_FOR_EVALUATION` requires every mandatory deterministic gate to pass.
+- Every check declares `mandatory`. READY requires at least one mandatory passing check, all mandatory gates passing, and no blockers. Mark optional diagnostics `mandatory: false` with explanatory evidence; keep failures or unrun results visible. Never omit or demote a frozen gate, or use an optional label to conceal a mandatory-criterion failure.
+- Include command output and relevant environment in evidence; the coordinator verifies actual execution at this revision. Do not rerun passing suites without a change or unresolved concern.
 - Use `BLOCKED` with at least one actionable `blockers` entry when the contract cannot be implemented without an externally owned decision.
 - Inspect the complete final diff before handoff. Unrelated pre-existing changes remain visible in `changedFiles` because they are part of the state Vigil receives.
 
@@ -54,4 +53,4 @@ npx --yes ajv-cli@5 validate --spec=draft2020 \
 
 If the validator or checkpoint tool cannot run, report `BLOCKED`; do not replace either with a partial ad hoc check.
 
-The `TRIVIAL` route does not use this handoff. It is bound directly to the exact human task, and Forge returns only changed files plus observed gate results to the orchestrator. Any need to interpret behavior, compatibility, or acceptance upgrades the route to `NORMAL` and requires Atlas.
+The `TRIVIAL` route does not use this card or checkpoint tool. Complete the exact human edit with a diff inspection and applicable checks. Behavioral interpretation upgrades the route to NORMAL; clear normal work can use a coordinator-authored contract without a separate Atlas session.

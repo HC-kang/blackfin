@@ -1,114 +1,56 @@
 # Blackfin
 
-Blackfin is a version-controlled engineering protocol for running coding agents through Orca. It separates planning, implementation, and independent evaluation without coupling any role to a model provider.
+Blackfin is a small, provider-independent engineering protocol for coding agents. Orca owns execution; Blackfin preserves acceptance criteria, evidence, independent evaluation, and bounded repairs.
 
-| Role | Owns | Must not own |
-| --- | --- | --- |
-| **Atlas** | Problem boundary and Acceptance Contract | Production implementation |
-| **Forge** | Implementation and deterministic checks | Acceptance criteria or final acceptance |
-| **Vigil** | Independent, evidence-based PASS/FAIL | Implementation changes |
+| Work | Route |
+| --- | --- |
+| Exact typo/comment/static rename | Current agent -> diff and applicable checks |
+| Clear, bounded behavior | Coordinator-authored contract -> Forge -> gates -> fresh Vigil |
+| Unclear scope/root cause | Atlas -> bounded investigation -> Forge -> gates -> fresh Vigil |
+| Auth, payment, migration, destructive data, shared-state concurrency, security, production infrastructure | Atlas -> Forge -> gates -> fresh Vigil -> human approval |
 
-The normal flow is:
-
-```text
-Atlas -> Forge -> deterministic gates -> Vigil
-                    ^                  |
-                    +------ FAIL ------+
-```
-
-A PASS ends automated iteration. High-risk work, and any run configured to require it, then waits for human review.
+Atlas plans WHAT/WHY, Forge implements HOW, and Vigil evaluates without editing. Clear normal work does not need a separate planner session. Reuse an existing task worktree unless writes conflict. Roles never imply a particular model provider.
 
 ## Install
 
-Install all four skills globally from the latest development state:
+Node.js/npm is required for the installer and the documented JSON Schema validator. Git and Python 3 are required for revision checkpoints.
+
+Install the stable release globally:
 
 ```bash
-npx --yes skills@latest add https://github.com/HC-kang/blackfin \
-  --skill blackfin-atlas \
-  --skill blackfin-forge \
-  --skill blackfin-vigil \
-  --skill blackfin-orchestrator \
-  --global \
-  --yes
-```
-
-Verify the installation:
-
-```bash
+npx --yes skills@latest add https://github.com/HC-kang/blackfin/tree/v0.2.0 \
+  --skill blackfin-atlas --skill blackfin-forge \
+  --skill blackfin-vigil --skill blackfin-orchestrator --global --yes
 npx --yes skills@latest list --global
 ```
 
-For production use, replace the repository URL with a stable release URL such as `https://github.com/HC-kang/blackfin/tree/v0.1.0`. `main` is development state.
-
-The skills are provider-independent. Select providers at run time, separately from roles:
-
-```text
-Atlas -> <planner-capable agent>
-Forge -> <implementation-capable agent>
-Vigil -> <evaluation-capable agent>
-```
+Use the repository URL without `/tree/v0.2.0` only to follow development on `main`. Each role ships its own required schemas and checkpoint resources; install all four for coordinated runs.
 
 ## Use
 
-Start a complete run:
-
 ```text
-Use Blackfin to fix the duplicate refresh-token rotation bug.
+Use Blackfin to fix this input-boundary bug.
+Use Blackfin / Vigil to evaluate <revision> against <contract-path>.
 ```
 
-Or invoke one role with its artifact input:
+Non-trivial work passes three validated JSON artifacts: Acceptance Contract, Forge handoff, and Vigil evaluation. The human or designated planner/coordinator owns the contract; Forge cannot weaken it. Store artifacts in `.blackfin/` or outside the implementation tree and pass absolute paths between worktrees.
 
-```text
-Use Blackfin / Forge. Implement the Acceptance Contract at <path>.
-Use Blackfin / Vigil. Evaluate <revision> against the contract at <path>.
-```
+Before Forge, fix the mandatory gate commands. The coordinator verifies their actual execution evidence at the handoff revision, executing them if only an agent summary is available. Vigil probes contract behavior independently; passing suites need not be repeated without cause. Optional diagnostics remain visible even when failed or unrun.
 
-Role handoffs use JSON artifacts validated by the schemas in [`schemas/`](schemas):
+Every failed-gate or Vigil-FAIL transition back to implementation consumes a repair cycle. Default: two after the initial attempt. Missing prerequisites mean BLOCKED; PASS stops automation and leaves required human approval pending against that revision.
 
-- Atlas emits an Acceptance Contract.
-- Forge consumes that contract and emits a Forge handoff.
-- Vigil consumes the contract, repository state, diff, and runtime; it emits an evaluation.
-- Conversational reasoning is not required at either handoff.
+Choose models and effort at runtime for the work. Stronger models do not require more ceremony or waive independent evaluation. Provider startup/trust and lifecycle permissions must work before substantive dispatch.
 
-Each installed role includes its required schema. Forge and Vigil also include the canonical dirty-worktree checkpoint tool, so agents do not need the Blackfin source checkout to validate a handoff. A dirty run reserves `.blackfin/` for protocol artifacts and requires Git plus Python 3.
+See [task classification](references/task-classification.md), [evidence](references/evidence-policy.md), [handoffs](references/handoff-protocol.md), and [the Orca example](references/orca-integration.md). Repository-local architecture, commands, conventions, and domain rules remain authoritative. Other runners may be used if they preserve artifacts, retry counts, and fresh evaluation contexts.
 
-Without Orca, run the same roles manually in separate agent contexts and pass the files plus exact repository state between them. Orca is the preferred tracked execution layer, not a prerequisite for the artifact protocol.
+## Versioning and validation
 
-See [`references/handoff-protocol.md`](references/handoff-protocol.md) for artifact flow and [`references/orca-integration.md`](references/orca-integration.md) for a concrete supervised Orca workflow.
+Skill changes are behavioral releases: record them in [CHANGELOG.md](CHANGELOG.md), update `VERSION`, merge reviewed changes to `main`, then tag the tested merge commit. Never move a published tag.
 
-## Task routes
-
-| Class | Route |
-| --- | --- |
-| Trivial | Exact human task -> Forge -> deterministic checks -> orchestrator completion |
-| Normal | Atlas -> Forge -> deterministic gates -> Vigil |
-| High uncertainty | Atlas + bounded investigation -> Forge -> gates -> Vigil |
-| High risk | Atlas -> optional investigation -> Forge -> gates -> Vigil -> human approval |
-
-The orchestrator defaults to at most two Forge repair cycles after the initial implementation. Each transition from a failed mandatory gate or Vigil `FAIL` back to implementation consumes one cycle, even inside the same agent session. A run may set a different positive limit before execution; reaching it escalates to a human.
-
-The trivial route is only for changes with no runtime, interface, data, dependency, configuration, generated-output, or security effect. It uses the exact human request instead of an Atlas contract and does not emit the non-trivial Forge handoff. Any ambiguity upgrades the task to `NORMAL`.
-
-## Repository contents
-
-```text
-skills/       Installable role skills
-references/   Detailed protocol policy
-schemas/      JSON Schema 2020-12 artifact contracts
-scripts/      Canonical dirty-worktree checkpoint tool
-tests/        Protocol and packaging checks
-CHANGELOG.md  Behavioral changes by release
-VERSION       Current protocol version
-```
-
-Repository-local instructions remain authoritative for architecture, commands, conventions, and domain invariants. Effective working context is the selected Blackfin role, repository instructions, the Acceptance Contract, and the current task.
-
-## Versioning
-
-Blackfin uses semantic versioning. Any instruction change that can alter agent behavior is a behavioral deployment and must be recorded in [`CHANGELOG.md`](CHANGELOG.md). Stable tags are recommended for production use.
-
-Repository checks run with:
+v0.2 artifacts use `schemaVersion: "0.2.0"`. Finish active v0.1 runs with v0.1 assets or start an explicit replacement contract; do not relabel old evidence. The checkpoint format remains `blackfin-checkpoint-v1`.
 
 ```bash
 python3 -m unittest discover -s tests -v
 ```
+
+`skills/` contains installable instructions; `references/` contains policy; `schemas/` and `scripts/` are canonical sources mirrored into the relevant role packages. Tests check schema semantics, checkpoint behavior, and package drift.

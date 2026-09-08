@@ -11,11 +11,13 @@ Prefer evidence in this order:
 
 Higher-order contradictory evidence wins. Forge's handoff helps locate checks but is not proof that they pass. When practical, derive at least one criterion-level observation independently from the contract instead of relying only on Forge-authored tests.
 
+Keep verification proportional. Use trustworthy gate execution already bound to this revision; repeat a suite only for stale, missing, or suspect evidence. Independently inspect contract behavior and relevant unhappy paths.
+
 The evaluation shape is:
 
 ```json
 {
-  "schemaVersion": "0.1.0",
+  "schemaVersion": "0.2.0",
   "role": "VIGIL",
   "decision": "FAIL",
   "acceptanceContract": {
