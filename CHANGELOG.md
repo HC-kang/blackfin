@@ -2,6 +2,11 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.2.1] - 2026-09-11
+
+- Restore mandatory Orca worktree notes at meaningful transitions and task completion, including trivial tasks. Read existing notes on resume, preserve unresolved items, assign shared notes to the coordinator, and verify persistence; chat or repository memory alone is insufficient.
+- Scope the global installation example to explicitly selected agents so project-only targets do not cause partial installation failures. Artifact schemas remain 0.2.0; checkpoint format remains v1.
+
 ## [0.2.0] - 2026-09-08
 
 - Fix checkpoint creation when the reserved `.blackfin/` artifact directory is gitignored; preserve the checkpoint format and cover ignored artifacts, deletions, and literal filenames.
