@@ -39,4 +39,4 @@ For uncertainty/high risk, add Atlas before Forge and cap any investigation. Hig
 
 Return gate failures as commands/output, Vigil failures as evaluation artifacts, and preserve the contract and consumed repair count. Default two repairs after the initial attempt. Reverify the exact revision after Vigil; PASS stops automation and leaves configured human approval pending.
 
-Use one resulting implementation state for evaluation and absolute paths across worktrees. Never treat worktrees as credential or network sandboxes. Keep concise, evidence-oriented worktree comments at meaningful transitions; ordinary file edits do not require loading Orca guides.
+Use one resulting implementation state for evaluation and absolute paths across worktrees. Never treat worktrees as credential or network sandboxes. Follow the installed [orchestrator's worktree-note requirement](../skills/blackfin-orchestrator/SKILL.md), including task completion on the trivial route. Read the current `orca-cli` guide for comment operations; unrelated file edits do not require loading Orca guides.

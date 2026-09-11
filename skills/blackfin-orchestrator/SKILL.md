@@ -17,6 +17,8 @@ Keep acceptance independent of implementation. Roles are responsibilities, not m
 5. Return reproducible failures to Forge. Default to two repair cycles after the initial attempt, counting failed gates and Vigil failures together; stop on exhaustion or missing prerequisites.
 6. PASS stops automated iteration. Honor any required human approval against the evaluated revision before accepting or shipping it.
 
+Under Orca, the task owner must read the existing worktree comment on start/resume and update it at meaningful transitions (confirmed cause, implementation or verification result, blocker, handoff) and before task completion, including trivial tasks. Record current state, observed evidence, and blockers/next action in the user's language; preserve unresolved items. Chat replies and repository memory do not replace this note. The coordinator consolidates shared-worktree notes in supervised runs. Verify the saved comment; if writing fails, report the error and pending note rather than claiming it was saved.
+
 Before a multi-role run, read [the runbook](references/runbook.md). Use the current Orca `orchestration` guide for supervised workers; only the coordinator loads that guide for lifecycle operations.
 
 Example: a known input-boundary bug needs a short coordinator-authored contract, Forge, and fresh Vigil. An authentication race needs Atlas and human review as well.

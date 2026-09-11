@@ -18,13 +18,16 @@ Node.js/npm is required for the installer and the documented JSON Schema validat
 Install the stable release globally:
 
 ```bash
-npx --yes skills@latest add https://github.com/HC-kang/blackfin/tree/v0.2.0 \
+npx --yes skills@latest add https://github.com/HC-kang/blackfin/tree/v0.2.1 \
   --skill blackfin-atlas --skill blackfin-forge \
-  --skill blackfin-vigil --skill blackfin-orchestrator --global --yes
+  --skill blackfin-vigil --skill blackfin-orchestrator \
+  --agent codex claude-code --global --yes
 npx --yes skills@latest list --global
 ```
 
-Use the repository URL without `/tree/v0.2.0` only to follow development on `main`. Each role ships its own required schemas and checkpoint resources; install all four for coordinated runs.
+The example targets Codex and Claude Code; replace `--agent` with your intended clients that support global installation. Project-only clients such as PromptScript cannot use `--global`.
+
+Use the repository URL without `/tree/v0.2.1` only to follow development on `main`. Each role ships its own required schemas and checkpoint resources; install all four for coordinated runs.
 
 ## Use
 
