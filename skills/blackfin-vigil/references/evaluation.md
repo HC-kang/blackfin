@@ -1,5 +1,7 @@
 # Evaluation card
 
+Routine review can return plain-text criterion observations and PASS/FAIL/BLOCKED against standalone acceptance and identified source state. Verify tracked and untracked content before and after review; missing identity or drift blocks acceptance. The JSON/checkpoint procedures below apply to high-risk, high-uncertainty, or explicitly structured runs only. Never downgrade an active structured run around a blocked validator.
+
 Prefer evidence in this order:
 
 1. Observable runtime behavior

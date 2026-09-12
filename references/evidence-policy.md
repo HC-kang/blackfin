@@ -4,9 +4,9 @@ Prefer observable runtime behavior, integration/E2E execution, deterministic tes
 
 Bind evidence to the evaluated revision and relevant command/environment. Missing required evidence is BLOCKED, observed mandatory failure is FAIL, and all mandatory criteria passing is PASS. Optional failures remain visible and cannot excuse a mandatory failure.
 
-Freeze mandatory gate commands before Forge. Forge cannot omit or demote them. Before Vigil, the coordinator inspects runner-observed command output and exit results at the handoff revision, or executes the gates itself when only agent summaries are available. Unbound logs and Forge's PASS labels cannot open the gate.
+Preserve user/repository-required checks on all routes. For structured runs, freeze mandatory gate commands before Forge; Forge cannot omit or demote them. Before Vigil, the coordinator inspects runner-observed command output and exit results at the handoff state, or executes the gates itself when only agent summaries are available. Unbound logs and Forge's PASS labels cannot open the gate.
 
-READY requires at least one passing mandatory deterministic check and no failing/unrun mandatory gates. If the repository has no gates, use the smallest meaningful contract-specific check. If none is possible, report BLOCKED. For trivial prose edits, a direct diff inspection plus applicable repository checks is sufficient; no synthetic runtime test is needed.
+Structured READY requires at least one passing mandatory deterministic check and no failing/unrun mandatory gates. If the repository has no gates, use the smallest meaningful contract-specific check. If none is possible, report BLOCKED. Routine work uses verification appropriate to its behavior, without synthetic tests that mirror the edit. Missing mandatory evidence blocks completion on every route; optional missing tooling does not. Without Vigil, report checks performed, not independent acceptance.
 
 Record optional diagnostics with `mandatory: false` and explanatory evidence; otherwise checks are mandatory. Optional failures/unrun checks can coexist with READY only if they do not contradict mandatory criteria. A failed frozen gate remains mandatory whatever Forge labels it.
 

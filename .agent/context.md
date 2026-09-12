@@ -1,6 +1,12 @@
 # Blackfin project memory
 
-## Decisions
+## Current policy
+
+- Use the current release's skills and [task classification](../references/task-classification.md) for routing; dated entries below are historical evidence, not additional current mandates.
+- v0.3 keeps routine low-impact work in one session; requested/required review or weak verification adds fresh Vigil. High-risk/high-uncertainty and explicitly structured runs retain the existing full protocol. Never downgrade an active run around blockers.
+- Orca notes are mandatory at meaningful transitions and completion, including trivial work; chat and this file do not replace them. Continue already-authorized delivery after passing checks/review without inventing another approval stop.
+
+## Historical v0.1 decisions
 
 - v0.1.0 is a documentation-and-schema protocol only; Orca remains the execution runtime.
 - Roles are provider-independent: Atlas plans, Forge implements, and Vigil evaluates.
@@ -85,3 +91,11 @@
 - Ship the restored note obligation as patch 0.2.1; artifact `schemaVersion` remains 0.2.0 and checkpoint format remains v1. Release/package versions do not require relabeling compatible artifacts.
 - Scope the stable global install example to explicit supported agents; provider targeting in an install example does not couple models to Blackfin roles.
 - All three regression-test methods, changed-skill validation, source/install comparisons, four-skill discovery, and diff checks passed. Tag only the reviewed main commit, verify tag CI and installation from the remote tag, and keep final release state in the Orca worktree note. The separate local orca-operator source is not part of this GitHub repository.
+- Published v0.2.1 from PR #4's merge commit `1f0b483ba0d9307514d26181096fb18970292246`. PR, main, and tag CI passed; installation from the remote tag produced all four source-identical packages for both Codex and Claude Code. GitHub release: https://github.com/HC-kang/blackfin/releases/tag/v0.2.1. Existing tags were not moved; v0.2.0 remained an untagged main milestone.
+
+## Harness research and v0.3 review — 2026-09-12
+
+- [Research and limits](../references/harness-review-2026-09.md): OpenAI's September 11 Astra guidance supports narrower discovery and conditional procedures; Anthropic's long-running experiments retain review where it adds value. The AGENTS.md paper v2 finds no statistically significant success-rate benefit versus no context and increased cost; do not repeat the stronger v1-era claim that context universally worsens performance.
+- Routine NORMAL work now avoids mandatory workers/JSON/checkpoints; review triggers and structured high-risk/high-uncertainty paths remain. This is a policy change, not a measured performance improvement. Keep active runs on their selected rules and distinguish ending repairs from continuing authorized delivery.
+- Orca Run `run_0df393c4a5a2`, task `task_456468bd1cdc`, independently exercised freshly installed skills on a zero-limit preview bug. The worker selected NORMAL, made a one-line fix, reused the existing regression check, wrote fixture memory, and sent its own successful worker_done without creating Blackfin JSON artifacts or extra role workers. Coordinator execution confirmed the test result; this is one bounded smoke, not an A/B benchmark.
+- The local Orca operator source defers lifecycle mechanics to current Orca guides while preserving verified worktree notes, unresolved items, and authority boundaries. It is separate from this repository and must be installed from its local source, not assumed updated by a Blackfin release.
