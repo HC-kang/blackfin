@@ -1,6 +1,6 @@
 # Contract authoring card
 
-Use JSON with these fields:
+Use this card for high-risk, high-uncertainty, or explicitly structured runs. Routine work can use the human's observable request without this card or a planner session. For structured acceptance, use JSON with these fields:
 
 ```json
 {

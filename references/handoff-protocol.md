@@ -1,10 +1,12 @@
 # Handoff protocol
 
-Every non-trivial run passes validated, standalone artifacts from one Blackfin release:
+Routine work ends with the change, observed commands/results, and remaining gaps. If routine review is required, supply standalone acceptance, exact source state/diff including untracked content, and check evidence to a fresh Vigil. Plain text is sufficient; the state must be identifiable before/after review and before delivery. Without a reviewer, do not claim independent PASS.
+
+High-risk, high-uncertainty, and explicitly structured runs pass validated, standalone artifacts from one Blackfin release. The remaining JSON/digest rules apply to these runs:
 
 1. Human or Atlas/coordinator -> Acceptance Contract.
 2. Forge -> unchanged contract reference, exact revision, diff, check evidence, and Forge handoff.
-3. Fresh Vigil -> criterion-level evaluation; FAIL returns to Forge, PASS stops automation, BLOCKED escalates.
+3. Fresh Vigil -> criterion-level evaluation; FAIL returns to Forge, PASS stops repairs, BLOCKED escalates. Continue authorized delivery subject to required approval.
 
 Use absolute shared paths or artifact IDs across worktrees. Run artifacts belong under reserved `.blackfin/` or outside the implementation tree. Relative uncommitted files do not follow new worktrees.
 
@@ -20,4 +22,4 @@ Persist artifacts and the consumed repair count. Every failed-gate or Vigil-FAIL
 
 If approval is required, record PENDING_HUMAN_APPROVAL with contract/evaluation digests and revision. Recheck the exact state before recording actor/time and shipping. A human rejection with unchanged acceptance uses a counted repair; changed requirements require an explicit replacement contract.
 
-TRIVIAL work uses the exact human request, direct diff inspection, and applicable checks; no structured handoff is required.
+Routine NORMAL and TRIVIAL work requires no structured handoff. Do not downgrade an active structured run to avoid its prerequisites. Passing checks/review stops repair iteration, not already-authorized delivery; required approval still applies.

@@ -1,6 +1,8 @@
 # Implementation handoff card
 
-For non-trivial work, Forge receives the Acceptance Contract as an artifact, not as remembered planner conversation.
+For routine review, provide standalone acceptance, exact source state/diff (including untracked changes), observed commands/results, and remaining gaps. A clean commit or content identity must let the reviewer detect drift. Plain text is sufficient; a claimed PASS is not evidence.
+
+The JSON protocol below applies only to high-risk, high-uncertainty, or explicitly structured runs. Forge receives the Acceptance Contract as an artifact, not remembered planner conversation. Preserve an active run's format and requirements.
 
 The handoff shape is:
 
@@ -53,4 +55,4 @@ npx --yes ajv-cli@5 validate --spec=draft2020 \
 
 If the validator or checkpoint tool cannot run, report `BLOCKED`; do not replace either with a partial ad hoc check.
 
-The `TRIVIAL` route does not use this card or checkpoint tool. Complete the exact human edit with a diff inspection and applicable checks. Behavioral interpretation upgrades the route to NORMAL; clear normal work can use a coordinator-authored contract without a separate Atlas session.
+Routine `NORMAL` and `TRIVIAL` work requires no JSON or checkpoint tool. This does not waive required review, checks, evidence, or approval; follow the coordinator's routing decision.

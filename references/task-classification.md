@@ -5,11 +5,13 @@ The coordinator chooses the highest applicable class from repository evidence. M
 | Class | Signals | Route |
 | --- | --- | --- |
 | `TRIVIAL` | Exact wording, comments, static renames; no behavioral effect | Direct edit -> diff and applicable checks |
-| `NORMAL` | Bounded behavior with understood scope and verification | Coordinator contract -> Forge -> gates -> fresh Vigil |
+| `NORMAL` | Clear, low-impact behavior with understood scope and meaningful verification | Current agent -> focused checks -> outcome; add fresh Vigil when review is needed |
 | `HIGH_UNCERTAINTY` | Unknown root cause, unclear performance/concurrency behavior | Atlas + bounded diagnosis -> Forge -> gates -> fresh Vigil |
 | `HIGH_RISK` | Auth, payment, migration, destructive data, shared-state concurrency, security, production infrastructure | Atlas -> Forge -> gates -> fresh Vigil -> human approval |
 
-For `NORMAL`, the coordinator can use the Atlas authoring card/schema without a planner worker. Add Atlas when scope or verification needs material investigation. A focused existing test helps establish evidence, but does not by itself prove coverage or authorize skipping Vigil.
+For routine `NORMAL` work, the human request supplies acceptance; no planner worker, JSON artifacts, or checkpoint tool is required. Add fresh Vigil for requested/required review, broad regression exposure, subjective acceptance, or weak verification. A focused test is evidence, not proof of complete coverage. Without Vigil, report observed checks and gaps rather than independent acceptance.
+
+High-risk and high-uncertainty work retains structured contracts, handoffs, and evaluation. Use the structured path also when the user or an automation consumer requires it. An existing structured run stays structured. Neither task relabeling nor model capability can waive required gates, missing evidence, approval, or a consumed repair budget.
 
 `TRIVIAL` excludes runtime, interface, data, dependency, configuration, generated-output, and security effects. Any ambiguity is at least `NORMAL`; trivial work needs neither role workers nor JSON/checkpoint artifacts.
 

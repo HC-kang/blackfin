@@ -1,6 +1,6 @@
 # Acceptance Contract
 
-The human or designated Atlas/coordinator owns the contract. For clear `NORMAL` work, the coordinator authors it without a separate Atlas worker. Forge and Vigil consume the artifact without planner conversation and cannot silently change it.
+The human or designated Atlas/coordinator owns acceptance. Routine NORMAL work can use the human's observable request without a separate planner or JSON. High-risk, high-uncertainty, and explicitly structured runs use the contract below. Forge and Vigil consume it without planner conversation and cannot silently change it.
 
 Use the [schema](../schemas/acceptance-contract.schema.json) and [authoring example](../skills/blackfin-atlas/references/contract-authoring.md).
 

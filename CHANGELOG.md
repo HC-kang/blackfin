@@ -2,6 +2,14 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.3.0] - 2026-09-12
+
+- Routine, clear low-impact behavior can complete in the current session with observed checks and an outcome record. Workers, three JSON artifacts, and checkpoint tooling are no longer the default for NORMAL work.
+- Independent review remains required for requested/required review, broad regression exposure, subjective acceptance, or weak verification. High-risk and high-uncertainty routes retain Atlas, structured artifacts, and fresh Vigil; high risk still requires human approval. Active structured runs cannot downgrade around blockers.
+- Plain-text routine reviews bind acceptance to identified source state and evidence. Self-checks never imply independent PASS; required checks, permission boundaries, bounded repairs, and verified Orca notes remain.
+- Stop repairs after passing checks/review, then continue already-authorized delivery instead of adding an unnecessary approval stop. Shorten skill discovery descriptions and defer format-specific instructions and Orca commands until needed.
+- Document primary-source research and its limits. No measured Blackfin performance improvement is claimed. Structured schemaVersion remains 0.2.0; checkpoint format remains v1.
+
 ## [0.2.1] - 2026-09-11
 
 - Restore mandatory Orca worktree notes at meaningful transitions and task completion, including trivial tasks. Read existing notes on resume, preserve unresolved items, assign shared notes to the coordinator, and verify persistence; chat or repository memory alone is insufficient.
