@@ -1,6 +1,6 @@
 # Contract authoring card
 
-Use this card for high-risk, high-uncertainty, or explicitly structured runs. Routine work can use the human's observable request without this card or a planner session. For structured acceptance, use JSON with these fields:
+Use this card for high-risk, high-uncertainty, or explicitly structured runs. For clear scope the coordinator may author the contract without a separate Atlas session; the human or designated owner still owns it.
 
 ```json
 {
@@ -38,24 +38,19 @@ Use this card for high-risk, high-uncertainty, or explicitly structured runs. Ro
 
 Rules:
 
-- Describe outcomes, not preferred code shapes.
-- Do not turn current implementation mechanisms into requirements unless an external constraint requires them.
-- Every mandatory behavior needs verification.
-- An assumption states what must be true, what breaks if false, and the mitigation.
-- Put repository facts in repository instructions, not in a reusable Blackfin contract template.
-- For clear NORMAL work, the coordinator may author this contract without a planner worker. Only the human or designated Atlas/coordinator may explicitly replace it; Forge cannot. Replacement invalidates earlier evaluations and does not reset the repair budget.
-- Omit empty constraints, assumptions, or unknowns. High-risk contracts require human approval.
-- Criterion IDs must be unique. Every required behavior ID must equal exactly one `verification[].criterion` value, with no extra verification IDs.
+- Describe outcomes, not code shapes; a current mechanism becomes a requirement only under an external constraint.
+- Every required behavior has exactly one `verification` mapping and a unique ID; there are no extra verification IDs. Schema validation cannot check these two rules, so check them separately.
+- `taskClass` is `NORMAL`, `HIGH_UNCERTAINTY`, or `HIGH_RISK`; high risk requires `humanApprovalRequired: true`.
+- Omit empty `constraints`, `assumptions`, and `unknowns`. Repository facts belong in repository instructions, not in a reusable contract.
+- Replacement is explicit, comes only from the owner, invalidates earlier evaluations, and does not reset the repair budget.
 
-Validate the complete artifact with the schema shipped beside this card. One tested command is:
+Validate the complete artifact with the schema shipped beside this card:
 
 ```bash
 npx --yes ajv-cli@5 validate --spec=draft2020 \
   -s <skill-directory>/references/acceptance-contract.schema.json \
   -d <acceptance-contract.json>
 ```
-
-Schema validation cannot enforce cross-field ID uniqueness and mapping. Check those two rules separately.
 
 When planning is blocked, do not manufacture a contract. Send this minimal result through the orchestrator escalation channel:
 

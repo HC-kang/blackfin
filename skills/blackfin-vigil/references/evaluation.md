@@ -1,21 +1,8 @@
 # Evaluation card
 
-Routine review can return plain-text criterion observations and PASS/FAIL/BLOCKED against standalone acceptance and identified source state. Verify tracked and untracked content before and after review; missing identity or drift blocks acceptance. The JSON/checkpoint procedures below apply to high-risk, high-uncertainty, or explicitly structured runs only. Never downgrade an active structured run around a blocked validator.
+A routine review returns plain-text criterion observations and `PASS`, `FAIL`, or `BLOCKED` against standalone acceptance and an identified source state, checked before and after review. The JSON and checkpoint procedures below apply to high-risk, high-uncertainty, or explicitly structured runs only, and an active structured run is never downgraded around a blocked validator.
 
-Prefer evidence in this order:
-
-1. Observable runtime behavior
-2. Integration or end-to-end execution
-3. Deterministic tests
-4. Static analysis
-5. Code inspection
-6. Agent explanation
-
-Higher-order contradictory evidence wins. Forge's handoff helps locate checks but is not proof that they pass. When practical, derive at least one criterion-level observation independently from the contract instead of relying only on Forge-authored tests.
-
-Keep verification proportional. Use trustworthy gate execution already bound to this revision; repeat a suite only for stale, missing, or suspect evidence. Independently inspect contract behavior and relevant unhappy paths.
-
-The evaluation shape is:
+Evidence, strongest first: observable runtime behavior, integration or end-to-end execution, deterministic tests, static analysis, code inspection, agent explanation. Higher-order contradictory evidence wins. Derive at least one criterion-level observation independently from the contract rather than only from Forge-authored tests.
 
 ```json
 {
@@ -50,27 +37,20 @@ The evaluation shape is:
 
 Rules:
 
-- Evaluate every criterion in the contract.
-- Copy each criterion's `mandatory` value from the unchanged contract.
-- Each evaluation `criteria[].id` equals one `requiredBehaviors[].id`; include every behavior exactly once and no extra IDs.
-- `PASS` requires every mandatory criterion to pass and all mandatory evidence to be available.
-- `FAIL` requires at least one failed mandatory criterion and should include reproducible evidence.
-- `BLOCKED` requires at least one actionable `blockers` entry naming the missing prerequisite or contradiction.
-- Evidence from another revision is stale and cannot support a PASS.
-- A non-mandatory `FAIL` or `BLOCKED` does not force overall failure, but remains visible in the criterion result and summary.
+- Evaluate every contract criterion exactly once, with its `mandatory` value copied unchanged and no extra IDs.
+- `PASS` requires every mandatory criterion passing with available evidence. `FAIL` requires at least one failed mandatory criterion with reproduction. `BLOCKED` names the missing prerequisite or contradiction in `blockers`.
+- Evidence from another revision is stale and cannot support `PASS`. A non-mandatory `FAIL` or `BLOCKED` stays visible in the criterion and summary without forcing overall failure.
 
-For a dirty worktree, run the shipped tool before any behavior check and after writing the evaluation:
+State checks use the shipped tool and [checkpoint protocol](checkpoint.md). For a `DIRTY` handoff, before any behavior check and again after writing the evaluation:
 
 ```bash
 python3 <skill-directory>/scripts/blackfin_checkpoint.py \
   --repo <worktree> --verify <handoff-checkpoint>
 ```
 
-Read the shipped [checkpoint protocol](checkpoint.md). A mismatch or evaluator-caused implementation change is `BLOCKED`, not a repair opportunity.
+For a `CLEAN` handoff, run the tool with `--json` at both points: `head` must match and `changedFiles` must stay empty; do not add a checkpoint to a `CLEAN` artifact. A mismatch or an evaluator-caused implementation change is `BLOCKED`, not a repair opportunity.
 
-For a `CLEAN` handoff, run the same tool with `--json` before and after evaluation and require the handoff `head` to match plus `changedFiles` to remain empty. Do not add its computed checkpoint to a CLEAN artifact.
-
-Validate the complete evaluation with the schema shipped beside this card:
+Validate the complete evaluation, then confirm contract criterion IDs are unique and each appears once with its `mandatory` value unchanged:
 
 ```bash
 npx --yes ajv-cli@5 validate --spec=draft2020 \
@@ -78,4 +58,4 @@ npx --yes ajv-cli@5 validate --spec=draft2020 \
   -d <evaluation.json>
 ```
 
-Also check that contract criterion IDs are unique and that the evaluation contains each required criterion exactly once with the unchanged `mandatory` value. If full validation cannot run, report `BLOCKED`; do not claim validation from a partial check.
+If full validation cannot run, report `BLOCKED`; do not claim validation from a partial check.

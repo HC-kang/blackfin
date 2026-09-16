@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -204,6 +205,22 @@ class BlackfinTest(unittest.TestCase):
         for role in ("blackfin-forge", "blackfin-vigil"):
             self.assertEqual(CHECKPOINT.read_bytes(), (ROOT / "skills" / role / "scripts" / CHECKPOINT.name).read_bytes())
             self.assertEqual((ROOT / "references/checkpoint.md").read_bytes(), (ROOT / "skills" / role / "references/checkpoint.md").read_bytes())
+
+    def test_skill_entrypoints_stay_small_and_portable(self):
+        link = re.compile(r"\]\(([^)#]+)\)")
+        for skill_dir in sorted((ROOT / "skills").iterdir()):
+            text = (skill_dir / "SKILL.md").read_text()
+            head, body = text.split("\n---\n", 1)
+            fields = dict(line.split(": ", 1) for line in head.splitlines()[1:])
+            self.assertEqual({"name", "description"}, set(fields), skill_dir.name)
+            self.assertEqual(skill_dir.name, fields["name"])
+            self.assertLessEqual(len(fields["description"]), 300, skill_dir.name)
+            self.assertLessEqual(len(body.splitlines()), 60, skill_dir.name)
+            for target in link.findall(body):
+                self.assertTrue((skill_dir / target).is_file(), f"{skill_dir.name}: {target}")
+        orchestrator = (ROOT / "skills/blackfin-orchestrator/SKILL.md").read_text()
+        for phrase in ("worktree note", "before completion", "trivial tasks included", "Verify the write"):
+            self.assertIn(phrase, orchestrator)
 
     def assertSchema(self, name, data, valid=True):
         with tempfile.NamedTemporaryFile("w", suffix=".json") as artifact:
