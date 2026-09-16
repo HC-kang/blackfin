@@ -1,24 +1,37 @@
 ---
 name: blackfin-orchestrator
-description: Route Blackfin work by risk and verification needs; coordinate review when needed.
+description: Route a coding task by consequence and verification strength, then drive it to verified completion. Use when the user invokes Blackfin or asks how much review or evidence a change needs. Not for unrelated Orca operations.
 ---
 
 # Blackfin / Orchestrator
 
-Keep acceptance externally owned. Roles are responsibilities, not mandatory sessions or fixed model providers. Follow the user's scope and repository requirements; do not add approval stops to already-authorized work.
+Blackfin keeps three things outside the implementer's hands: acceptance, evidence, and review. Everything else is judgment. The user's instructions and repository rules outrank this skill; if a Blackfin rule makes you pause or stop short, name the skill file and quote the line.
 
-1. Inspect the task and choose its route:
-   - `TRIVIAL`: exact wording/comment/static rename with no behavioral effect. Complete directly with a diff check and relevant repository checks; no role workers or JSON artifacts required.
-   - `NORMAL`: clear, low-impact behavior with understood scope and meaningful verification. Complete in the current session using the human request, focused checks, and a short outcome record; no workers, JSON, or checkpoint tool required by default. Add fresh Vigil for requested review, broad regression exposure, subjective acceptance, or weak verification. Never use this route to bypass a required gate or approval.
-   - `HIGH_UNCERTAINTY` or `HIGH_RISK`: Atlas -> bounded investigation if needed -> Forge -> gates -> fresh Vigil. High risk also requires human approval.
-2. Establish expected behavior and required checks before implementation. Do not weaken either to fit the result. For structured runs, freeze the contract and mandatory gate commands before Forge.
-3. Use the existing task worktree when safe; isolate conflicting implementations. Choose provider and effort per task, not by role name.
-4. Confirm gate results from actual execution at the handoff revision before dispatching Vigil. Stop failed gates at Forge; do not spend evaluator work on them.
-5. Return reproducible failures for repair. Default to two repair cycles after the initial attempt, counting failed gates and Vigil failures together; stop on exhaustion or missing mandatory prerequisites. Do not relabel work to evade a blocker.
-6. Stop repair iteration when required checks and any required review pass; continue the user's authorized delivery steps. Without Vigil, report checks and remaining gaps, not an independent PASS. Approval is required only where the user, repository, or high-risk route requires it; bind it to the evaluated state.
+## Route
 
-Under Orca, the task owner must read the existing worktree comment on start/resume and update it at meaningful transitions (confirmed cause, implementation or verification result, blocker, handoff) and before task completion, including trivial tasks. Record current state, observed evidence, and blockers/next action in the user's language; preserve unresolved items. Chat replies and repository memory do not replace this note. The coordinator consolidates shared-worktree notes in supervised runs. Verify the saved comment; if writing fails, report the error and pending note rather than claiming it was saved.
+Ask two questions: what breaks if this is wrong, and how strong is the available verification? Take the highest row that applies. Model strength lowers no row; effort rises with the row.
 
-For independent review or a structured run, read [the runbook](references/runbook.md). Use the current Orca `orchestration` guide for supervised workers; only the coordinator loads that guide for lifecycle operations.
+| Situation | Route |
+| --- | --- |
+| Local and reversible, and a focused check proves it (exact wording, comments, static renames included) | Direct: implement, show observed evidence, done. No workers, JSON, or checkpoint tool. |
+| Review requested or required, broad regression exposure, subjective acceptance, or weak verification | Direct, then a fresh Vigil before delivery. |
+| Root cause or scope unclear | Structured (`HIGH_UNCERTAINTY`): Atlas contract → Forge → frozen gates → fresh Vigil. |
+| Irreversible or shared: auth, payment, migration, data deletion, shared-state concurrency, security, production infrastructure | Structured (`HIGH_RISK`) plus human approval of the evaluated result. |
 
-Example: fix a local input-boundary bug and verify neighboring values directly. An authentication race needs Atlas, structured evidence, fresh Vigil, and human approval.
+## Invariants
+
+- Acceptance is owned by the user, Atlas, or the coordinator. Forge implements it and never edits it; replacement is explicit and invalidates prior evaluation.
+- Evidence is observed output at the evaluated state. A summary or PASS label opens no gate; when only a summary exists, run the gate yourself.
+- One writer per worktree. Exploration and review may fan out; writes do not.
+- Vigil is fresh and read-only. It receives acceptance, the exact diff or state, and check evidence, not the implementer's transcript. Without Vigil, report checks and gaps, never an independent PASS.
+- Repairs are bounded: default two after the first attempt, counted across sessions. Each failed mandatory gate or Vigil FAIL consumes one. A missing prerequisite is BLOCKED, not a repair.
+- A structured run finishes structured. Passing checks and review end repair, not already-authorized delivery.
+- Required approval is of a concrete, evaluated result: prepare everything, then stop once, bound to that revision.
+
+## Under Orca
+
+Read the existing worktree note on start or resume. Update it at meaningful transitions (cause confirmed, implemented, verified, blocked, handed off) and before completion, trivial tasks included: current state, observed evidence, next action; keep unresolved items. Chat and repository memory are not the note. Verify the write; report a failed write instead of claiming it. In supervised runs the coordinator consolidates shared notes.
+
+For structured runs read [the runbook](references/runbook.md). For supervised workers, only the coordinator loads the current Orca `orchestration` guide.
+
+Example: an off-by-one at an input boundary is Direct: fix it, run the neighboring values, report the output. A refresh-token race is `HIGH_RISK`: Atlas, frozen gates, fresh Vigil, then one approval.

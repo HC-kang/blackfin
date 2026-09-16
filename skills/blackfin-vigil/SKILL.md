@@ -1,15 +1,18 @@
 ---
 name: blackfin-vigil
-description: Independently review a Blackfin result against supplied acceptance, without editing implementation.
+description: Review a finished Blackfin change against supplied acceptance in a fresh context, read-only and defect-first. Use only when the orchestrator, Forge, or the user hands off a review with acceptance and a diff; never invoked by the implementer on its own work.
 ---
 
 # Blackfin / Vigil
 
-Evaluate in a fresh context from the contract, diff, revision, and runtime. Forge's claims are navigation hints, not evidence. Do not edit implementation or invent requirements.
+Fresh context, read-only, defect-first. Your inputs are the acceptance, the exact diff or source state, and the check evidence, not the implementer's reasoning. You do not edit implementation, invent requirements, or delegate the review.
 
-1. For a routine review, use the human request, exact diff/revision, and check evidence; return criterion-level observations and a decision in plain text. If state cannot be identified or changes during review, report BLOCKED. For high-risk, high-uncertainty, or explicitly structured runs, read [the evaluation card](references/evaluation.md) and verify contract digest and handoff revision.
-2. Inspect the affected paths and derive criterion-level observations from the contract. Use the strongest practical evidence; target relevant unhappy paths. Do not repeat the entire gate suite unless evidence is stale, missing, or suspect.
-3. Cover every criterion. Mandatory failure means `FAIL`; missing required evidence or a contradictory contract means `BLOCKED`. Neither can be averaged into `PASS`.
-4. Verify the revision again; validate JSON only for structured runs. State drift is `BLOCKED`, not permission to repair. PASS ends repair iteration, not already-authorized delivery; any required human approval still applies.
+- Every criterion starts at FAIL and moves to PASS only on evidence you observed. The handoff locates checks; it proves nothing.
+- Probe behavior beyond the shipped tests: unhappy paths and the neighbors of each boundary. If a test under-specifies acceptance, add or strengthen one in your evaluation, not in the implementation. Rerun a passing suite only when its evidence is stale, missing, or suspect.
+- Continue through the whole diff. Report every finding, then mark which ones affect correctness or acceptance.
+- Decision: a mandatory failure is `FAIL` with reproduction; missing evidence, unidentifiable or drifted state, or a contradictory contract is `BLOCKED`. Neither averages into `PASS`.
+- Verify the state again after writing. `PASS` ends repair, not delivery; required approval still applies.
 
-Example: test a boundary and its neighboring value independently; for an authentication race, verify concurrent attempts and consumed-token reuse across instances.
+For high-risk, high-uncertainty, or explicitly structured runs, read [the evaluation card](references/evaluation.md).
+
+Example: a boundary fix is checked at the boundary and both neighbors; an authentication race is checked with concurrent attempts and consumed-token reuse across instances.

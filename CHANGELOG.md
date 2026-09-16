@@ -2,6 +2,14 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.4.0] - 2026-09-17
+
+- Rewrite each skill as a short set of invariants for current models: acceptance owned outside the implementer, observed evidence at the evaluated state, one writer per worktree, fresh read-only Vigil, bounded repairs, structured runs that stay structured, and one approval of the evaluated result. Step recipes, verification reminders, and prohibition-heavy wording are removed.
+- Route with two questions, consequence and verification strength, mapped to the existing classes; `TRIVIAL` and `NORMAL` run Direct with no ceremony. The user's instructions outrank Blackfin, and a Blackfin-caused pause must name the skill and line.
+- Forge audits each claim against a session tool result and keeps the requested scope. Vigil starts every criterion at FAIL, probes beyond shipped tests, and reports the whole diff before marking what affects acceptance.
+- Skill descriptions state purpose, trigger, and boundary in under 260 characters; frontmatter is limited to `name` and `description` for Codex and Claude Code. A package test enforces both plus the Orca note obligation.
+- Reference cards keep only structured-run JSON, rules, and commands. [Harness evidence](references/harness-evidence-2026-09.md) records the research behind this release. Artifact schemas remain 0.2.0; checkpoint format remains v1.
+
 ## [0.3.0] - 2026-09-12
 
 - Routine, clear low-impact behavior can complete in the current session with observed checks and an outcome record. Workers, three JSON artifacts, and checkpoint tooling are no longer the default for NORMAL work.

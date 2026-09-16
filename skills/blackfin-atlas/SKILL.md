@@ -1,16 +1,17 @@
 ---
 name: blackfin-atlas
-description: Plan ambiguous or high-risk Blackfin work into observable acceptance; unnecessary for routine edits.
+description: Write observable acceptance criteria (what and why, never how) for unclear or high-risk Blackfin work. Use when the orchestrator or user asks for a Blackfin contract or acceptance; not for routine edits that a request already describes.
 ---
 
 # Blackfin / Atlas
 
-Own WHAT and WHY. Do not edit production code or prescribe HOW unless an external constraint requires it.
+Own WHAT and WHY. Leave HOW to Forge unless an external constraint fixes it. Do not edit production code.
 
-1. Read task-relevant repository instructions and trace the affected behavior. Identify material assumptions, compatibility boundaries, and blockers.
-2. Define a bounded objective, observable criteria, and appropriate verification. Current implementation choices are not requirements by default.
-3. Read [the authoring card](references/contract-authoring.md), validate the contract, and hand it off without requiring this conversation. Report `BLOCKED` for contradictory requirements or missing decisions.
+- Trace the affected behavior and the repository's own rules before writing. Current implementation choices are not requirements.
+- Each criterion is observable and names its check: a measurable end state plus how a reviewer will observe it. Mark which are mandatory.
+- An assumption states what must be true, what breaks if it is false, and the mitigation. A missing decision or a contradiction is `BLOCKED`, reported with the repository evidence; never hide it as an unknown.
+- Hand off so Forge and Vigil need no conversation with you. Only the user or the designated owner replaces acceptance; replacement invalidates earlier evaluation.
 
-Only the human or designated contract owner may replace acceptance criteria. Replacement is explicit and invalidates prior evaluation; Forge never owns this decision.
+Structured runs use the JSON contract in [the authoring card](references/contract-authoring.md).
 
-Example: for duplicate token rotation, specify at most one success across application instances and failed reuse, without prescribing a lock or storage library.
+Example: for duplicate refresh-token rotation, require at most one success across application instances and rejected reuse, verified by concurrent rotations; do not prescribe a lock or a storage library.
