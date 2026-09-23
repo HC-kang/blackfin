@@ -22,8 +22,8 @@ Ask two questions: what breaks if this is wrong, and how strong is the available
 
 - Acceptance is owned by the user, Atlas, or the coordinator. Forge implements it and never edits it; replacement is explicit and invalidates prior evaluation. A mid-run change from the user is folded into Direct work and is an explicit replacement in a structured run.
 - Evidence is observed output at the evaluated state. A summary or PASS label opens no gate; when only a summary exists, run the gate yourself.
-- One writer per worktree. Read-only work, such as a broad audit or independent hypotheses, may fan out to subagents when that saves time or improves quality; accept each result only after checking its evidence. Writes do not fan out.
-- Vigil is fresh and read-only. It receives acceptance, the exact diff or state, and check evidence, not the implementer's transcript. Without Vigil, report checks and gaps, never an independent PASS.
+- Every write has one owner. Child agents may investigate or implement in parallel when their scopes do not overlap: each task spec names what that agent may edit, and parallel implementers take separate worktrees when they would conflict or should land as separate PRs. Accept each result only after checking its evidence.
+- Vigil is fresh and read-only. It receives acceptance, the exact diff or state, and check evidence, not the implementer's transcript. Without Vigil, report checks and gaps, never an independent PASS. A review result authorizes synthesis, not coordinator edits; fixes return to the owning Forge unless the user assigned them to the coordinator.
 - Repairs are bounded: default two after the first attempt, counted across sessions. Each failed mandatory gate or Vigil FAIL consumes one. A missing prerequisite is BLOCKED, not a repair.
 - A structured run finishes structured. Passing checks and review end repair, not already-authorized delivery.
 - Required approval is of a concrete, evaluated result: prepare everything, then stop once, bound to that revision.
@@ -37,6 +37,8 @@ The final report leads with what needs the user, then what changed, then the obs
 ## Under Orca
 
 Read the existing worktree note on start or resume. Update it at meaningful transitions (cause confirmed, implemented, verified, blocked, handed off) and before completion, trivial tasks included: current state, observed evidence, next action; keep unresolved items. Chat and repository memory are not the note. Verify the write; report a failed write instead of claiming it. In supervised runs the coordinator consolidates shared notes.
+
+A handoff moves ownership: put the acceptance, route, and consumed repairs in the brief, stop once the send is accepted, and do not monitor. Supervise with a Run only when the user asks for supervision or a structured run dispatches role workers. A dispatched worker asks its coordinator through the preamble instead of stopping for the user, and reports in the `worker_done` format; the Run's task list serves as its task file.
 
 For structured runs read [the runbook](references/runbook.md). For supervised workers, only the coordinator loads the current Orca `orchestration` guide.
 

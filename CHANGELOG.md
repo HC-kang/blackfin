@@ -6,9 +6,9 @@ All notable Blackfin behavior changes are recorded here. Blackfin follows semant
 
 - Align with the Claude Opus 5.5 guide (2026-09-22) and the GPT-6 family prompting guide (Astra, Sol, Luna). Evidence and limits are in [harness evidence](references/harness-evidence-2026-09.md#update-2026-09-23).
 - The orchestrator names the finish line before work, keeps going while no step needs the user, and stops only for a blocker, a required approval, or a destructive or out-of-scope action. Long runs keep the task list in a file. The final report leads with what needs the user.
-- Read-only work may fan out to subagents; each result is accepted only after its evidence is checked. Writes stay single-threaded.
+- Harmonize with Orca 1.4.207 built-in orchestration rules. Child agents may investigate or implement in parallel on scopes that do not overlap, with named edit ownership and separate worktrees when writes conflict or land as separate PRs; each result is accepted only after its evidence is checked. Vigil stays read-only, and a review result authorizes synthesis, not coordinator edits. A handoff carries acceptance, route, and consumed repairs and ends at the accepted send. Dispatched workers ask their coordinator and report in the `worker_done` format.
 - Forge does not stop at a first implementation, does not write tests that mirror a reversible low-impact change, and repeats checks only for a new change, failure, or concern. Vigil reports each finding with file, line, cause, and reproduction, blocking findings first. Atlas marks what it could not confirm and where it looked.
-- A pause caused by Blackfin says whether it follows an explicit rule or an interpretation. A mid-run user change is folded into Direct work and is an explicit replacement in a structured run. The runbook checks that the chosen effort level exists for the model and keeps acceptance and final review on the strongest model.
+- A pause caused by Blackfin says whether it follows an explicit rule or an interpretation. A mid-run user change is folded into Direct work and is an explicit replacement in a structured run. The runbook passes a model only when the user named one, an effort only when the model supports it, and confirms both from `launch.effective`.
 - Artifact schemas remain 0.2.0; checkpoint format remains v1.
 
 ## [0.4.0] - 2026-09-17

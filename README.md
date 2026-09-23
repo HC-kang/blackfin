@@ -11,7 +11,7 @@ Route by two questions: what breaks if the change is wrong, and how strong is th
 | Root cause or scope unclear | Structured: Atlas -> Forge -> frozen gates -> fresh Vigil |
 | Irreversible or shared: auth, payment, migration, data deletion, shared-state concurrency, security, production infrastructure | Structured plus one human approval of the evaluated result |
 
-Atlas owns WHAT and WHY, Forge is the single writer, and Vigil reviews in a fresh read-only context. Roles are responsibilities, not mandatory sessions. Model strength lowers no row. The user's instructions outrank Blackfin, and a Blackfin-caused pause names the skill and line. Each run names its finish line, keeps going while no step needs the user, and stops only for a blocker, a required approval, or a destructive or out-of-scope action.
+Atlas owns WHAT and WHY, Forge writes only its assigned scope, and Vigil reviews in a fresh read-only context. Roles are responsibilities, not mandatory sessions. Model strength lowers no row. The user's instructions outrank Blackfin, and a Blackfin-caused pause names the skill and line. Each run names its finish line, keeps going while no step needs the user, and stops only for a blocker, a required approval, or a destructive or out-of-scope action.
 
 ## Install
 
@@ -42,7 +42,7 @@ Direct work uses the human request as acceptance and ends with the change, the o
 
 Structured runs pass three validated JSON artifacts: Acceptance Contract, Forge handoff, and Vigil evaluation. Mandatory gates are frozen before Forge; evidence is bound to the contract and the exact source revision; every failed gate or Vigil FAIL consumes one of two default repair cycles; a structured run cannot be downgraded around a blocker. High-risk approval binds to the evaluated revision after everything else is prepared.
 
-Vigil starts each criterion at FAIL, probes behavior beyond the shipped tests, and reports every finding with file, line, cause, and reproduction, blocking findings first. Read-only audits may fan out to subagents; each result is accepted only after its evidence is checked. State is checked before and after review.
+Vigil starts each criterion at FAIL, probes behavior beyond the shipped tests, and reports every finding with file, line, cause, and reproduction, blocking findings first. Child agents may investigate or implement in parallel on scopes that do not overlap; each result is accepted only after its evidence is checked, and review results never become coordinator edits. State is checked before and after review.
 
 Under Orca, read the existing worktree note on start or resume, update it at meaningful transitions and before completion, and verify it saved. Chat and project memory do not replace the note.
 
