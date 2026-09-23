@@ -37,3 +37,22 @@ Two control runs on 2026-09-17 with no skill loaded (Claude Fable 5.1): a one-ch
 ## Limits
 
 No controlled study compares a planner, implementer, and reviewer protocol against a single agent on coding tasks. The repair budget of two is a cap without a measured optimum. v0.4 changes wording and defaults; it claims no measured speed, cost, or quality gain.
+
+## Update 2026-09-23
+
+Third pass, for v0.5.0. Sources: Anthropic, [Getting the most out of Opus 5.5](https://claude.dev/blog/getting-the-most-out-of-opus-5-5/) (2026-09-22); OpenAI, [Using GPT-6](https://developers.openai.com/api/docs/guides/latest-model) prompting guide, the [Astra skills post](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra), and the [Sol](https://developers.openai.com/api/docs/models/gpt-6-sol) and [Luna](https://developers.openai.com/api/docs/models/gpt-6-luna) model pages; xAI, [Grok 4.7](https://docs.x.ai/developers/grok-4-7) (2026-09-21). The earlier conclusions stand. The new sources add these points.
+
+| Change | Evidence | Strength |
+| --- | --- | --- |
+| Name the finish line; keep going; stop only when blocked, before destructive or out-of-repo actions | Opus 5.5: "Say what 'done' looks like and when you want it to stop and ask." Opus 5.5 sometimes stops to report "a summary that names the next step without taking it, an offer to continue, or a list of choices that don't block the work". Astra "may reach a first implementation and come back for your review while there's still work to do"; "a requirement to stop for review after the first implementation will pull the model toward an earlier stopping point". | Official guidance, both vendors |
+| Fan out read-only work; check each subagent's evidence | Opus 5.5: split audits and migrations across subagents; "When a subagent reports back, check its evidence before you accept it." GPT-6: Astra "may delegate less often than desired"; specify when to delegate. | Official guidance |
+| Task list in a file for long runs | Opus 5.5: context is summarized on long runs; "a list in a file survives that". | Official guidance |
+| Report leads with what needs the user | Opus 5.5: read "what it needs from you first"; set the summary format in instructions. | Official guidance |
+| Test calibration | GPT-6: "Do not write tests for reversible, low-impact changes that mirror the implementation"; broaden or repeat testing only for new changes, failures, or unresolved concerns. | Official guidance |
+| Findings with location, cause, and reproduction | Opus 5.5 review prompt: file and line, why it is wrong, how to show it fails. Blackfin keeps whole-diff coverage and puts blocking findings first instead of listing only blockers. | Official guidance, local choice |
+| Pause attribution separates rule from interpretation | GPT-6: "Distinguish explicit skill requirements from your interpretation of guidelines." | Official guidance |
+| Mixed models | Astra post: "Guidance that helps Sol or Luna may overconstrain GPT-6 Astra." Luna is positioned for "focused, high-volume tasks". Effort names differ: Astra has no `none`; Sol and Luna run `none` to `max`; Grok 4.7 runs `low` to `xhigh`. | Official docs |
+
+Checked and already satisfied: no Blackfin skill asks the model to "think carefully" or to reproduce its reasoning (Opus 5.5 asks to delete both); descriptions are short and specific; user instructions outrank skills. Not adopted: writing-style and anti-slop prompts, because output style belongs to the user's own instructions and not to a shared protocol. Grok 4.7's page gives only API and caching guidance, so it changes no rule.
+
+No new local run backs v0.5.0. It changes wording; it claims no measured gain.

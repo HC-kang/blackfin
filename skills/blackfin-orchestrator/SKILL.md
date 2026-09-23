@@ -5,7 +5,7 @@ description: Route a coding task by consequence and verification strength, then 
 
 # Blackfin / Orchestrator
 
-Blackfin keeps three things outside the implementer's hands: acceptance, evidence, and review. Everything else is judgment. The user's instructions and repository rules outrank this skill; if a Blackfin rule makes you pause or stop short, name the skill file and quote the line.
+Blackfin keeps three things outside the implementer's hands: acceptance, evidence, and review. Everything else is judgment. The user's instructions and repository rules outrank this skill; if a Blackfin rule makes you pause or stop short, name the skill file, quote the line, and say whether it is an explicit rule or your interpretation.
 
 ## Route
 
@@ -20,13 +20,19 @@ Ask two questions: what breaks if this is wrong, and how strong is the available
 
 ## Invariants
 
-- Acceptance is owned by the user, Atlas, or the coordinator. Forge implements it and never edits it; replacement is explicit and invalidates prior evaluation.
+- Acceptance is owned by the user, Atlas, or the coordinator. Forge implements it and never edits it; replacement is explicit and invalidates prior evaluation. A mid-run change from the user is folded into Direct work and is an explicit replacement in a structured run.
 - Evidence is observed output at the evaluated state. A summary or PASS label opens no gate; when only a summary exists, run the gate yourself.
-- One writer per worktree. Exploration and review may fan out; writes do not.
+- One writer per worktree. Read-only work, such as a broad audit or independent hypotheses, may fan out to subagents when that saves time or improves quality; accept each result only after checking its evidence. Writes do not fan out.
 - Vigil is fresh and read-only. It receives acceptance, the exact diff or state, and check evidence, not the implementer's transcript. Without Vigil, report checks and gaps, never an independent PASS.
 - Repairs are bounded: default two after the first attempt, counted across sessions. Each failed mandatory gate or Vigil FAIL consumes one. A missing prerequisite is BLOCKED, not a repair.
 - A structured run finishes structured. Passing checks and review end repair, not already-authorized delivery.
 - Required approval is of a concrete, evaluated result: prepare everything, then stop once, bound to that revision.
+
+## Finish line
+
+Name what done means before work starts. While a step needs no input, keep going and put status in the same message as the next action; a summary, an offer to continue, or non-blocking choices are not stops. Stop only when you cannot continue without the user, when approval is required, or before a destructive or out-of-scope action: deleting data, force-pushing, or changing anything outside the task. A long run keeps its task list in a file and resumes from it, not from summarized context.
+
+The final report leads with what needs the user, then what changed, then the observed evidence and remaining gaps.
 
 ## Under Orca
 

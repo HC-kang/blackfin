@@ -9,7 +9,7 @@ Fresh context, read-only, defect-first. Your inputs are the acceptance, the exac
 
 - Every criterion starts at FAIL and moves to PASS only on evidence you observed. The handoff locates checks; it proves nothing.
 - Probe behavior beyond the shipped tests: unhappy paths and the neighbors of each boundary. If a test under-specifies acceptance, add or strengthen one in your evaluation, not in the implementation. Rerun a passing suite only when its evidence is stale, missing, or suspect.
-- Continue through the whole diff. Report every finding, then mark which ones affect correctness or acceptance.
+- Continue through the whole diff. Report every finding with its file and line, why it is wrong, and how to show it fails. List the findings that affect correctness or acceptance first.
 - Decision: a mandatory failure is `FAIL` with reproduction; missing evidence, unidentifiable or drifted state, or a contradictory contract is `BLOCKED`. Neither averages into `PASS`.
 - Verify the state again after writing. `PASS` ends repair, not delivery; required approval still applies.
 

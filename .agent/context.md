@@ -107,3 +107,9 @@
 - New package test enforces portable frontmatter, ≤60-line body, resolvable links, and the orchestrator note obligation (guard for the 2026-09-10 regression). Routing labels kept for schema compatibility; the decision is framed as two questions (consequence, verification strength).
 - Control runs with no skill (Fable 5.1) already fixed a boundary bug with evidence and FAILed a planted defect by probing; GREEN runs with the new skills kept that behavior and added route statement, no ceremony, whole-diff findings. Two runs, not a benchmark.
 - Released via PR #6 squash merge `5ea8f46`, tag `v0.4.0`, GitHub release; installed globally for codex + claude-code (all other agent dirs symlink `~/.agents/skills`). `orca-operator` now lives in a new local git repo at `~/agent-skills` (tag `orca-operator-v0.2.0`) with a one-line note recipe (state | evidence | next) and card-status sync; installed from the local path.
+
+## v0.5.0 model-guidance update — 2026-09-23
+
+- Sources: Opus 5.5 guide (2026-09-22), GPT-6 prompting guide + Astra skills post + Sol/Luna pages, Grok 4.7 page; summary and limits in `references/harness-evidence-2026-09.md#update-2026-09-23`. WebFetch summaries drop detail; read the raw page (`curl`, or OpenAI's `.md` suffix) before quoting.
+- Added counter-default rules only: finish line + stop rule (blocker, approval, destructive/out-of-scope), task list in a file, report leads with user needs, read-only fan-out with evidence check, Forge no first-implementation stop and no mirror tests, Vigil file/line/cause/repro findings, rule-vs-interpretation pause attribution, mid-run change handling, effort-level preflight. Skipped writing-style prompts (user-owned) and Grok (API-only guidance).
+- orca-operator reviewed, no change needed. Tests, four validators, diff check passed; no behavioral smoke run for this release.
