@@ -19,11 +19,20 @@ A report earns its place only when it answers the reader's questions faster than
 
 Choose the visual from the shape of the data, using [the visual grammar](references/visual-grammar.md). Position and length beat angle, area, and color, so prefer bars, dots, and aligned tables. Every chart answers a question named in its heading. Status always pairs color with an icon and a word.
 
-Prose holds only what structure cannot: a reason, a trade-off, a caveat. A paragraph is at most three sentences; a sentence that lists three or more parallel things becomes a list or a table.
-
 Most readers scroll and never click, so the static page carries the verdict, the decisions, and the gaps. Interaction answers a further question: filter, sort, compare, reveal evidence, or decide. A verdict, blocker, decision, or unverified claim never sits behind hover, a closed disclosure, or a non-default tab.
 
 Models fall back on a few default looks. The grammar names them (paragraph cards, gradients, emoji markers, pill buttons, monospace labels, and more); do not use any of them; a general aim for a page that does not look generic only swaps one default for another.
+
+## Wording
+
+Page text follows ASD-STE100 (Simplified Technical English) in the user's language:
+
+- A prose sentence is complete and carries one idea: at most 20 words in an instruction, 25 in a description. Headings, labels, chips, and table cells are short noun phrases; one that grows into a clause becomes a full sentence.
+- Keep one register across the page; in Korean, prose uses 합니다체 and labels use noun phrases, never casual or note-style endings.
+- Use active voice with the actor named, one term for each thing, and one verb for each action.
+- Prose holds only what structure cannot: a reason, a trade-off, a caveat. A paragraph has at most three sentences; three or more parallel items become a list or a table.
+- Use at most one hedge per sentence, and no greetings, self-narration, filler, slogans, or exclamations.
+- Keep every condition, number, range, and unit, even when shorter text would read better. Code, commands, quotes, and error text stay verbatim.
 
 ## Build, check, deliver
 
