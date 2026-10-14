@@ -255,7 +255,9 @@ class BlackfinTest(unittest.TestCase):
             )],
             "text dump": [page("<div class=card>" + prose * 3 + "</div>"), page("<figure>" + prose * 3 + "</figure>" + table)],
             "a text block has": [page("<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table),
-                                 head + table + "<p>" + "word " * 101],
+                                 head + table + "<p>" + "word " * 101,
+                                 page("<p>" + "one two<br>" * 60 + "</p>" + table),
+                                 page("<div>" + "alpha " * 60 + "omega<p>x</p>tail " + "beta " * 40 + "</div>" + table)],
             "characters of prose before": page(lead + table),
         }
         for prefix, htmls in cases.items():

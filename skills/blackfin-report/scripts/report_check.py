@@ -89,6 +89,8 @@ class Scan(HTMLParser):
         words = len("".join(self.blocks.pop()).split())
         if words:
             self.block_words.append(words)
+        if self.blocks:  # text after a nested block starts a new word
+            self.blocks[-1].append(" ")
 
     def handle_startendtag(self, tag, attrs):
         self.handle_starttag(tag, attrs)
@@ -141,6 +143,8 @@ class Scan(HTMLParser):
                     if t == "svg":
                         info["shapes"] = True
                         break
+        if tag == "br" and self.blocks:
+            self.blocks[-1].append(" ")
         if tag in VOID:
             return
         info = {"bar": shown and bool(BAR_STYLE.search(style)), "text": False, "shapes": False,
@@ -149,6 +153,8 @@ class Scan(HTMLParser):
             self.stack[-1][1]["label"] = True
         self.stack.append((tag, info))
         if tag in BLOCKS:
+            if self.blocks:
+                self.blocks[-1].append(" ")
             self.blocks.append([])
 
     def handle_endtag(self, tag):
