@@ -230,31 +230,41 @@ class BlackfinTest(unittest.TestCase):
         template = (ROOT / "skills/blackfin-report/assets/report-template.html").read_text()
         self.assertEqual(([], []), report_check.check(template)[:2])
 
-        head = "<!doctype html><html><head><title>t</title><meta name=viewport content=width=device-width></head><body><h1>Report</h1>"
-        paragraph = "<p>" + "The migration moved most endpoints and some are blocked. " * 12 + "</p>"
-        fails = report_check.check(head + "<div class=card>" + paragraph * 3 + "</div></body></html>")[0]
-        self.assertTrue(any(f.startswith("text dump") for f in fails), fails)
-        self.assertTrue(any(f.startswith("no visual encoding") for f in fails), fails)
-        self.assertTrue(any("words" in f for f in fails), fails)
-
+        title, viewport = "<title>t</title>", "<meta name=viewport content=width=device-width>"
+        head = f"<!doctype html><html><head>{title}{viewport}</head><body><h1>Report</h1>"
         table = "<table><tr><td>1</td></tr></table>"
-        for dependency in ('<link rel=stylesheet href="https://fonts.example/x.css">', '<link rel=stylesheet href="theme.css">',
-                           '<img srcset="https://example.com/a.png 1x" alt="plot">', '<script src="app.js"></script>'):
-            fails = report_check.check(head + dependency + table + "</body></html>")[0]
-            self.assertTrue(any(f.startswith("not self-contained") for f in fails), dependency)
+        prose = "<p>" + "The migration moved most endpoints and some are blocked. " * 12 + "</p>"
+        lead = "<p>We changed <code>queue.py</code>. " + "The worker now retries failed jobs with backoff and logs each attempt. " * 20 + "</p>"
+        page = lambda body, h=head: h + body + "</body></html>"
+        cases = {
+            "no <title>": page(table, head.replace(title, "")),
+            "no <meta name=viewport>": page(table, head.replace(viewport, "")),
+            "not self-contained": [page(d + table) for d in (
+                '<link rel=stylesheet href="https://fonts.example/x.css">', '<link rel=stylesheet href="theme.css">',
+                '<img srcset="https://example.com/a.png 1x" alt="plot">', '<script src="app.js"></script>',
+                '<style>@import url(theme.css);</style>', '<script type="module">import * as d3 from "https://cdn.example/d3.js";</script>',
+                '<svg role="img" aria-label="x"><image href="https://example.com/p.png"/></svg>', '<svg role="img" aria-label="x"><use href="sprite.svg#i"/></svg>',
+            )],
+            "no visual encoding": [page(b) for b in (
+                '<div style="width:100%">Finished.</div>', '<template><svg aria-label="chart"></svg></template><p>Finished.</p>',
+                '<svg aria-hidden="true"><path d="M0 0"/></svg><p>Finished.</p>', '<svg style="display:none" aria-label="x"></svg><p>Finished.</p>',
+                '<div hidden><table><tr><td>1</td></tr></table></div><p>Finished.</p>', '<div style="height:100%"></div><p>Finished.</p>',
+            )],
+            "text dump": [page("<div class=card>" + prose * 3 + "</div>"), page("<figure>" + prose * 3 + "</figure>" + table)],
+            "a text block has": page("<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table),
+            "characters of prose before": page(lead + table),
+        }
+        for prefix, htmls in cases.items():
+            for html in htmls if isinstance(htmls, list) else [htmls]:
+                fails = report_check.check(html)[0]
+                self.assertTrue(any(prefix in f for f in fails), (prefix, html[:120], fails))
 
-        for fake in ('<div style="width:100%">Finished.</div>', '<template><svg aria-label="chart"></svg></template><p>Finished.</p>'):
-            fails = report_check.check(head + fake + "</body></html>")[0]
-            self.assertTrue(any(f.startswith("no visual encoding") for f in fails), fake)
-        self.assertEqual([], report_check.check(head + '<div role="img" aria-label="1 of 1 done">■</div></body></html>')[0])
-
-        wrapped = head + "<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table + "</body></html>"
-        fails = report_check.check(wrapped)[0]
-        self.assertTrue(any(f.startswith("text dump") for f in fails), fails)
-        self.assertTrue(any("words" in f for f in fails), fails)
-
-        warns = report_check.check(head + table + '<svg></svg><svg aria-label="x"><title>x</title></svg></body></html>')[1]
+        self.assertEqual([], report_check.check(page('<div role="img" aria-label="1 of 1 done">■</div>'))[0])
+        self.assertEqual([], report_check.check(page('<style>/* url(x.png) */</style>' + table))[0])
+        warns = report_check.check(page(table + '<svg></svg><svg aria-label="x"><title>x</title></svg>'))[1]
         self.assertTrue(any("without aria-label" in w for w in warns), warns)
+        warns = report_check.check(page(table + '<style>@media only print { a { color: #000 } }</style>'))[1]
+        self.assertFalse(any("print" in w for w in warns), warns)
 
     def assertSchema(self, name, data, valid=True):
         with tempfile.NamedTemporaryFile("w", suffix=".json") as artifact:

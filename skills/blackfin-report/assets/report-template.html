@@ -79,7 +79,7 @@ table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th button { all: unset; cursor: pointer; font-weight: 600; }
 th[aria-sort="ascending"] button::after { content: " ▲"; } th[aria-sort="descending"] button::after { content: " ▼"; }
-td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+td.num, th.num, .num { text-align: right; font-variant-numeric: tabular-nums; }
 tr[hidden] { display: none; }
 
 /* Timeline. */
@@ -107,7 +107,7 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
 <main>
 
 <header>
-  <span class="st st-warn">부분 완료 · 결정 1건</span>
+  <span class="st st-warn">부분 완료, 결정 1건</span>
   <h1>v3 인덱서로 9개 컬렉션 중 8개를 옮겼고, 검색 p95가 38% 줄었습니다.</h1>
   <div class="units" role="img" aria-label="9개 중 완료 8, 막힘 1">
     <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="warn"></i>
@@ -163,9 +163,9 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
 <section aria-labelledby="where">
   <h2 id="where">p95 개선 폭이 큰 컬렉션 <small>ms 감소량</small></h2>
   <div class="bars">
-    <div><span>products</span><div class="track"><i class="now" style="--v:100"></i></div><span class="mono">−121</span></div>
-    <div><span>orders</span><div class="track"><i class="now" style="--v:71"></i></div><span class="mono">−86</span></div>
-    <div><span>users</span><div class="track"><i class="now" style="--v:33"></i></div><span class="mono">−40</span></div>
+    <div><span>products</span><div class="track"><i class="now" style="--v:100"></i></div><span class="num">−121</span></div>
+    <div><span>orders</span><div class="track"><i class="now" style="--v:71"></i></div><span class="num">−86</span></div>
+    <div><span>users</span><div class="track"><i class="now" style="--v:33"></i></div><span class="num">−40</span></div>
   </div>
 </section>
 
@@ -229,8 +229,13 @@ document.querySelectorAll("table[data-sortable] th button").forEach((btn) => {
     const dir = th.getAttribute("aria-sort") === "ascending" ? "descending" : "ascending";
     table.querySelectorAll("th").forEach((h) => h.removeAttribute("aria-sort"));
     th.setAttribute("aria-sort", dir);
-    const key = (tr) => { const t = tr.children[i].innerText.trim(), n = parseFloat(t.replace(/[^\d.-]/g, "")); return isNaN(n) ? t : n; };
-    const rows = [...table.tBodies[0].rows].sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * (dir === "ascending" ? 1 : -1));
+    // Numbers (with U+2212 minus, commas, and units) sort numerically; dates and text sort as text after numbers.
+    const key = (tr) => {
+      const t = tr.children[i].innerText.trim().replace(/\u2212/g, "-"), m = t.replace(/,/g, "").match(/^-?\d+(\.\d+)?(?![\d-])/);
+      return m && !/^\d{4}-\d{2}/.test(t) ? [0, parseFloat(m[0]), ""] : [1, 0, t];
+    };
+    const cmp = (x, y) => x[0] - y[0] || x[1] - y[1] || x[2].localeCompare(y[2], undefined, { numeric: true });
+    const rows = [...table.tBodies[0].rows].sort((a, b) => cmp(key(a), key(b)) * (dir === "ascending" ? 1 : -1));
     rows.forEach((r) => table.tBodies[0].appendChild(r));
   });
 });
