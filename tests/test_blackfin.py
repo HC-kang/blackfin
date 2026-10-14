@@ -256,8 +256,7 @@ class BlackfinTest(unittest.TestCase):
             "text dump": [page("<div class=card>" + prose * 3 + "</div>"), page("<figure>" + prose * 3 + "</figure>" + table)],
             "a text block has": [page("<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table),
                                  head + table + "<p>" + "word " * 101,
-                                 page("<p>" + "one two<br>" * 60 + "</p>" + table),
-                                 page("<div>" + "alpha " * 60 + "omega<p>x</p>tail " + "beta " * 40 + "</div>" + table)],
+                                 page("<p>" + "one two<br>" * 60 + "</p>" + table)],
             "characters of prose before": page(lead + table),
         }
         for prefix, htmls in cases.items():
@@ -272,6 +271,12 @@ class BlackfinTest(unittest.TestCase):
             self.assertEqual([], report_check.check(page(clean + table))[0], clean)
         hidden_padding = "<div class=card>" + ("<p>" + "migration " * 30 + "</p>") * 5 + "</div><pre hidden>" + "word " * 400 + "</pre>"
         self.assertTrue(any(f.startswith("text dump") for f in report_check.check(page(hidden_padding + table))[0]))
+        words = lambda body: report_check.check(page(body + table))[2]["longestBlockWords"]
+        self.assertEqual(20, words("<p>" + "one two<br>" * 10 + "</p>"))
+        self.assertEqual(4, words("<div>alpha omega<p>x</p>tail beta</div>"))
+        self.assertEqual(1, words("<div>" + "one<br hidden>" * 101 + "</div>"))
+        self.assertEqual(1, words("<div>one<span hidden><br></span>two</div>"))
+        self.assertEqual(1, words("<div>one<div hidden>x</div>two</div>"))
         warns = report_check.check(page(table + '<svg></svg><svg aria-label="x"><title>x</title></svg>'))[1]
         self.assertTrue(any("without aria-label" in w for w in warns), warns)
         warns = report_check.check(page(table + '<style>@media only print { a { color: #000 } }</style>'))[1]

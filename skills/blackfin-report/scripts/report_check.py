@@ -85,11 +85,11 @@ class Scan(HTMLParser):
     def inside(self, tags):
         return any(t in tags for t, _ in self.stack)
 
-    def close_block(self):
+    def close_block(self, shown=True):
         words = len("".join(self.blocks.pop()).split())
         if words:
             self.block_words.append(words)
-        if self.blocks:  # text after a nested block starts a new word
+        if self.blocks and shown:  # text after a shown nested block starts a new word
             self.blocks[-1].append(" ")
 
     def handle_startendtag(self, tag, attrs):
@@ -143,7 +143,7 @@ class Scan(HTMLParser):
                     if t == "svg":
                         info["shapes"] = True
                         break
-        if tag == "br" and self.blocks:
+        if tag == "br" and shown and self.blocks:
             self.blocks[-1].append(" ")
         if tag in VOID:
             return
@@ -153,8 +153,6 @@ class Scan(HTMLParser):
             self.stack[-1][1]["label"] = True
         self.stack.append((tag, info))
         if tag in BLOCKS:
-            if self.blocks:
-                self.blocks[-1].append(" ")
             self.blocks.append([])
 
     def handle_endtag(self, tag):
@@ -163,7 +161,7 @@ class Scan(HTMLParser):
         while self.stack:
             top, info = self.stack.pop()
             if top in BLOCKS and self.blocks:
-                self.close_block()
+                self.close_block(info["shown"])
             if info["bar"] and not info["text"]:
                 # A sized element with no text inside is a bar.
                 self.bars += 1
