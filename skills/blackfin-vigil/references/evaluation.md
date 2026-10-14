@@ -1,6 +1,6 @@
 # Evaluation card
 
-A routine review returns plain-text criterion observations and `PASS`, `FAIL`, or `BLOCKED` against standalone acceptance and an identified source state, checked before and after review. The JSON and checkpoint procedures below apply to high-risk, high-uncertainty, or explicitly structured runs only, and an active structured run is never downgraded around a blocked validator.
+A routine review returns plain-text criterion observations, findings with file, line, cause, reproduction, and a blocking or non-blocking mark, and `PASS`, `FAIL`, or `BLOCKED` against standalone acceptance and an identified source state, checked before and after review. The JSON and checkpoint procedures below apply to high-risk, high-uncertainty, or explicitly structured runs only, and an active structured run is never downgraded around a blocked validator.
 
 Evidence, strongest first: observable runtime behavior, integration or end-to-end execution, deterministic tests, static analysis, code inspection, agent explanation. Higher-order contradictory evidence wins. Derive at least one criterion-level observation independently from the contract rather than only from Forge-authored tests.
 

@@ -2,7 +2,7 @@
 
 Orca owns execution and lifecycle. Blackfin owns acceptance and evidence. For supervised work, resolve the CLI through the installed `orchestration` skill and read its version-matched guide once. Read `orca-cli` only for additional workspace or browser operations. Workers use the injected lifecycle preamble.
 
-Before dispatch, confirm model/effort, workspace trust, required artifact/runtime access, and lifecycle permissions. Inspect launch receipts; a terminal existing is not proof that an agent accepted the task. Do not bypass provider trust prompts. Failed lifecycle reporting requires an explicit coordinator recovery record after inspecting evidence, not a forged worker completion.
+Before dispatch, confirm workspace trust, required artifact and runtime access, and lifecycle permissions; pass a model or effort only when the user named one. Inspect launch receipts; a terminal existing is not proof that an agent accepted the task. Do not bypass provider trust prompts. Failed lifecycle reporting requires an explicit coordinator recovery record after inspecting evidence, not a forged worker completion.
 
 ## Routine work
 

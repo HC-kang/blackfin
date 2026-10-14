@@ -1,4 +1,5 @@
 import copy
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -221,6 +222,65 @@ class BlackfinTest(unittest.TestCase):
         orchestrator = (ROOT / "skills/blackfin-orchestrator/SKILL.md").read_text()
         for phrase in ("worktree note", "before completion", "trivial tasks included", "Verify the write"):
             self.assertIn(phrase, orchestrator)
+
+    def test_report_check_blocks_text_dumps_and_passes_template(self):
+        spec = importlib.util.spec_from_file_location("report_check", ROOT / "skills/blackfin-report/scripts/report_check.py")
+        report_check = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(report_check)
+        template = (ROOT / "skills/blackfin-report/assets/report-template.html").read_text()
+        self.assertEqual(([], []), report_check.check(template)[:2])
+
+        title, viewport = "<title>t</title>", "<meta name=viewport content=width=device-width>"
+        head = f"<!doctype html><html><head>{title}{viewport}</head><body><h1>Report</h1>"
+        table = "<table><tr><td>1</td></tr></table>"
+        prose = "<p>" + "The migration moved most endpoints and some are blocked. " * 12 + "</p>"
+        lead = "<p>We changed <code>queue.py</code>. " + "The worker now retries failed jobs with backoff and logs each attempt. " * 20 + "</p>"
+        page = lambda body, h=head: h + body + "</body></html>"
+        cases = {
+            "no <title>": page(table, head.replace(title, "")),
+            "no <meta name=viewport>": page(table, head.replace(viewport, "")),
+            "not self-contained": [page(d + table) for d in (
+                '<link rel=stylesheet href="https://fonts.example/x.css">', '<link rel=stylesheet href="theme.css">',
+                '<img srcset="https://example.com/a.png 1x" alt="plot">', '<script src="app.js"></script>',
+                '<style>@import url(theme.css);</style>', '<script type="module">import * as d3 from "https://cdn.example/d3.js";</script>',
+                '<svg role="img" aria-label="x"><image href="https://example.com/p.png"/></svg>', '<svg role="img" aria-label="x"><use href="sprite.svg#i"/></svg>',
+                '<img srcset="data:image/png;base64,AAAA 1x, https://example.com/plot.png 2x" alt="plot">',
+            )],
+            "no visual encoding": [page(b) for b in (
+                '<div style="width:100%">Finished.</div>', '<template><svg aria-label="chart"></svg></template><p>Finished.</p>',
+                '<svg aria-hidden="true"><path d="M0 0"/></svg><p>Finished.</p>', '<svg style="display:none" aria-label="x"></svg><p>Finished.</p>',
+                '<div hidden><table><tr><td>1</td></tr></table></div><p>Finished.</p>', '<div style="height:100%"></div><p>Finished.</p>',
+                '<div style="--gap:16px"></div><p>Finished.</p>', '<div style="width:0%"></div><p>Finished.</p>',
+                '<svg aria-label="chart"></svg><p>Finished.</p>',
+            )],
+            "text dump": [page("<div class=card>" + prose * 3 + "</div>"), page("<figure>" + prose * 3 + "</figure>" + table)],
+            "a text block has": [page("<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table),
+                                 head + table + "<p>" + "word " * 101,
+                                 page("<p>" + "one two<br>" * 60 + "</p>" + table)],
+            "characters of prose before": page(lead + table),
+        }
+        for prefix, htmls in cases.items():
+            for html in htmls if isinstance(htmls, list) else [htmls]:
+                fails = report_check.check(html)[0]
+                self.assertTrue(any(prefix in f for f in fails), (prefix, html[:120], fails))
+
+        self.assertEqual([], report_check.check(page('<div role="img" aria-label="1 of 1 done">■</div>'))[0])
+        for clean in ('<style>/* url(x.png) */</style>', '<style>@import url("data:text/css,body{color:red}");</style>',
+                      '<script>// import x from "https://cdn.example/x.js";\nconst example = \'import x from "old.js";\';</script>',
+                      "<p>" + "w<b>or</b>d " * 35 + "</p>", "<p hidden>" + "word " * 110 + "</p>"):
+            self.assertEqual([], report_check.check(page(clean + table))[0], clean)
+        hidden_padding = "<div class=card>" + ("<p>" + "migration " * 30 + "</p>") * 5 + "</div><pre hidden>" + "word " * 400 + "</pre>"
+        self.assertTrue(any(f.startswith("text dump") for f in report_check.check(page(hidden_padding + table))[0]))
+        words = lambda body: report_check.check(page(body + table))[2]["longestBlockWords"]
+        self.assertEqual(20, words("<p>" + "one two<br>" * 10 + "</p>"))
+        self.assertEqual(4, words("<div>alpha omega<p>x</p>tail beta</div>"))
+        self.assertEqual(1, words("<div>" + "one<br hidden>" * 101 + "</div>"))
+        self.assertEqual(1, words("<div>one<span hidden><br></span>two</div>"))
+        self.assertEqual(1, words("<div>one<div hidden>x</div>two</div>"))
+        warns = report_check.check(page(table + '<svg></svg><svg aria-label="x"><title>x</title></svg>'))[1]
+        self.assertTrue(any("without aria-label" in w for w in warns), warns)
+        warns = report_check.check(page(table + '<style>@media only print { a { color: #000 } }</style>'))[1]
+        self.assertFalse(any("print" in w for w in warns), warns)
 
     def assertSchema(self, name, data, valid=True):
         with tempfile.NamedTemporaryFile("w", suffix=".json") as artifact:

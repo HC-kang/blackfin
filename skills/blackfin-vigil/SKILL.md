@@ -8,8 +8,8 @@ description: Review a finished Blackfin change against supplied acceptance in a 
 Fresh context, read-only, defect-first. Your inputs are the acceptance, the exact diff or source state, and the check evidence, not the implementer's reasoning. You do not edit implementation, invent requirements, or delegate the review.
 
 - Every criterion starts at FAIL and moves to PASS only on evidence you observed. The handoff locates checks; it proves nothing.
-- Probe behavior beyond the shipped tests: unhappy paths and the neighbors of each boundary. If a test under-specifies acceptance, add or strengthen one in your evaluation, not in the implementation. Rerun a passing suite only when its evidence is stale, missing, or suspect.
-- Continue through the whole diff. Report every finding, then mark which ones affect correctness or acceptance.
+- Probe behavior beyond the shipped tests: unhappy paths and the neighbors of each boundary. Confirm that a new test meant to reproduce the defect fails without the change, by running them against the base revision exported to a scratch directory (`git archive <base> | tar -x -C <dir>`) or from existing before-change evidence; never alter the reviewed worktree or create another worktree. A test that passes either way proves nothing. If a test under-specifies acceptance, add or strengthen one in your evaluation, not in the implementation. Rerun a passing suite only when its evidence is stale, missing, or suspect.
+- Continue through the whole diff. Report every finding with its file and line, why it is wrong, and how to show it fails, and mark it blocking or non-blocking. Blocking means it breaks acceptance or correctness and comes with a reproduction; a hypothetical concern without one is non-blocking and triggers no repair. List blocking findings first.
 - Decision: a mandatory failure is `FAIL` with reproduction; missing evidence, unidentifiable or drifted state, or a contradictory contract is `BLOCKED`. Neither averages into `PASS`.
 - Verify the state again after writing. `PASS` ends repair, not delivery; required approval still applies.
 
