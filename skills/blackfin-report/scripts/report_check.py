@@ -48,6 +48,9 @@ JS_IMPORT = re.compile(
     r"|\bimport\s*\(\s*['\"](?!data:)([^'\"]+)['\"]\s*\)")
 PRINT_MEDIA = re.compile(r"@media[^{]*\bprint\b", re.I)
 HIDDEN_STYLE = re.compile(r"display\s*:\s*none|visibility\s*:\s*hidden", re.I)
+# ASD-STE100 caps descriptive sentences at 25 words.
+SENTENCE_END = re.compile(r"(?<=[.!?。])\s+")
+MAX_SENTENCE_WORDS = 25
 EMOJI = re.compile("[\U0001F300-\U0001FAFF☀-➿]")
 
 # ponytail: fixed thresholds; tune here if real reports show false positives.
@@ -81,12 +84,15 @@ class Scan(HTMLParser):
         self.css = []
         self.scripts = []
         self.missing_alt = self.emoji_headings = self.unlabeled_svg = 0
+        self.long_sentences = []
 
     def inside(self, tags):
         return any(t in tags for t, _ in self.stack)
 
     def close_block(self, shown=True):
-        words = len("".join(self.blocks.pop()).split())
+        text = " ".join("".join(self.blocks.pop()).split())
+        words = len(text.split())
+        self.long_sentences += [s for s in SENTENCE_END.split(text) if len(s.split()) > MAX_SENTENCE_WORDS]
         if words:
             self.block_words.append(words)
         if self.blocks and shown:  # text after a shown nested block starts a new word
@@ -253,11 +259,13 @@ def check(html):
         warns.append(f"{s.unlabeled_svg} <svg> without aria-label, role=img, or <title>")
     if re.search(r"(animation|transition)\s*:", css) and "prefers-reduced-motion" not in css:
         warns.append("motion without a prefers-reduced-motion override")
+    if s.long_sentences:
+        warns.append(f"{len(s.long_sentences)} sentences exceed {MAX_SENTENCE_WORDS} words (ASD-STE100); split them, first: {s.long_sentences[0][:80]}")
     if s.missing_alt:
         warns.append(f"{s.missing_alt} <img> without alt text")
     metrics = {
         "visibleChars": s.visible, "proseShare": round(share, 2), "longestBlockWords": longest,
-        "leadProse": s.lead, "graphics": s.graphics, "bars": s.bars, "tables": s.tables, "controls": s.controls,
+        "leadProse": s.lead, "longSentences": len(s.long_sentences), "graphics": s.graphics, "bars": s.bars, "tables": s.tables, "controls": s.controls,
     }
     return fails, warns, metrics
 

@@ -277,6 +277,9 @@ class BlackfinTest(unittest.TestCase):
         self.assertEqual(1, words("<div>" + "one<br hidden>" * 101 + "</div>"))
         self.assertEqual(1, words("<div>one<span hidden><br></span>two</div>"))
         self.assertEqual(1, words("<div>one<div hidden>x</div>two</div>"))
+        long_sentence = "<p>" + "word " * 30 + "end. Short one.</p>"
+        self.assertTrue(any("ASD-STE100" in w for w in report_check.check(page(long_sentence + table))[1]))
+        self.assertFalse(any("ASD-STE100" in w for w in report_check.check(page("<p>" + "word " * 20 + "end. " * 3 + "</p>" + table))[1]))
         warns = report_check.check(page(table + '<svg></svg><svg aria-label="x"><title>x</title></svg>'))[1]
         self.assertTrue(any("without aria-label" in w for w in warns), warns)
         warns = report_check.check(page(table + '<style>@media only print { a { color: #000 } }</style>'))[1]

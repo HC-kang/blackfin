@@ -2,6 +2,10 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.7.0] - 2026-10-14
+
+- Report pages follow ASD-STE100 wording in the user's language: complete one-idea sentences (20 words for instructions, 25 for descriptions), one register across the page (in Korean, 합니다체 prose and noun-phrase labels), active voice, one term per thing and one verb per action, at most one hedge, no filler, and every condition and number kept. The checker warns on sentences over 25 words; the template text follows the same rules.
+
 ## [0.6.1] - 2026-10-14
 
 - Report template: metadata labels no longer wrap one character per line on narrow screens.

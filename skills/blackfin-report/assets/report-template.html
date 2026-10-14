@@ -108,7 +108,7 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
 
 <header>
   <span class="st st-warn">부분 완료, 결정 1건</span>
-  <h1>v3 인덱서로 9개 컬렉션 중 8개를 옮겼고, 검색 p95가 38% 줄었습니다.</h1>
+  <h1>v3 인덱서로 9개 컬렉션 중 8개를 옮겼습니다. 검색 p95는 38% 줄었습니다.</h1>
   <div class="units" role="img" aria-label="9개 중 완료 8, 막힘 1">
     <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="warn"></i>
   </div>
@@ -120,10 +120,10 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
   <div class="decisions">
     <div class="decision card" data-decision="1">
       <b>1. <code>audit_logs</code> 재색인 시점</b>
-      <div class="muted">전체 재색인에 약 6시간이 걸리고, 그동안 감사 검색이 느려집니다.</div>
+      <div class="muted">전체 재색인에 약 6시간이 걸립니다. 그동안 감사 검색이 느려집니다.</div>
       <div class="options">
-        <button type="button" data-option="A" aria-pressed="false"><b>A. 오늘 밤 실행</b><span class="muted">야간 트래픽 기준 영향 작음</span></button>
-        <button type="button" data-option="B" aria-pressed="false"><b>B. 주말로 연기</b><span class="muted">v2 인덱서 1개를 그때까지 유지</span></button>
+        <button type="button" data-option="A" aria-pressed="false"><b>A. 오늘 밤 실행</b><span class="muted">야간 트래픽 기준으로 영향이 작습니다.</span></button>
+        <button type="button" data-option="B" aria-pressed="false"><b>B. 주말로 연기</b><span class="muted">그때까지 v2 인덱서 1개를 유지합니다.</span></button>
       </div>
     </div>
   </div>
@@ -199,7 +199,7 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
   <table>
     <thead><tr><th>위험</th><th>상태</th><th>확인 방법</th></tr></thead>
     <tbody>
-      <tr><td>날짜 필드 매핑 변경으로 기존 쿼리 3개가 빈 결과를 낼 수 있음</td><td><span class="st st-warn">미확인</span></td><td><code>scripts/replay-queries.sh --since 7d</code></td></tr>
+      <tr><td>날짜 필드 매핑이 바뀌어 기존 쿼리 3개가 빈 결과를 낼 수 있습니다.</td><td><span class="st st-warn">미확인</span></td><td><code>scripts/replay-queries.sh --since 7d</code></td></tr>
     </tbody>
   </table>
 </section>
