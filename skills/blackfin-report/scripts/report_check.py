@@ -3,6 +3,8 @@
 
 FAIL lines block delivery; WARN lines are judgment calls to review.
 Thresholds are calibrated heuristics, not research constants.
+Scope: visibility comes from the hidden attribute, aria-hidden, and inline
+styles; stylesheet rules are not evaluated, so the render check covers them.
 """
 
 import argparse
@@ -11,7 +13,7 @@ import re
 import sys
 from html.parser import HTMLParser
 
-# Text in these is not shown or not prose.
+# Text in these is never shown as page text.
 HIDDEN = {"script", "style", "template", "noscript", "title"}
 # Text in these is structure, not prose; it does not count toward the prose share.
 STRUCTURED = {"table", "ul", "ol", "dl", "pre", "code", "svg", "button", "label",
@@ -19,24 +21,31 @@ STRUCTURED = {"table", "ul", "ol", "dl", "pre", "code", "svg", "button", "label"
 # Text in these is exempt from the paragraph-length check.
 VERBATIM = {"pre", "code", "svg"}
 HEADINGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
-GRAPHIC = {"svg", "canvas", "meter", "progress"}
 CONTROLS = {"button", "input", "select", "textarea", "details"}
 # Block structure that ends the opening prose; inline code, time, or kbd does not.
-LEAD_BREAK = {"table", "ul", "ol", "dl", "pre", "figure", "details", "button", "select", "canvas", "meter", "progress"}
+LEAD_BREAK = {"table", "ul", "ol", "dl", "pre", "figure", "details", "button", "select",
+              "canvas", "meter", "progress"}
 BLOCKS = {"p", "div", "section", "article", "aside", "blockquote", "header", "footer",
           "main", "body", "li", "td", "th", "dd", "dt", "figure", "figcaption", "details"}
 VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta",
         "source", "track", "wbr"}
+SVG_SHAPES = {"rect", "circle", "ellipse", "line", "polyline", "polygon", "path", "text", "use", "image"}
 # A resource attribute must be inline (data:) or a fragment; anything else is a file or host dependency.
-RESOURCE_ATTRS = {"src", "srcset", "poster", "data", "background"}
+RESOURCE_ATTRS = {"src", "poster", "data", "background"}
 # href loads a resource on these tags (SVG image and use, filter images).
 HREF_RESOURCE = {"image", "use", "feimage", "script"}
 INLINE = re.compile(r"^\s*(data:|#|$)", re.I)
-# A bar is sized by a numeric custom property or by a percentage below 100; 100% is layout.
-BAR_STYLE = re.compile(r"(^|;)\s*(width|height|inline-size|block-size)\s*:\s*(\d{1,2}(\.\d+)?|0?\.\d+)%|--[\w-]+\s*:\s*[\d.]+")
-CSS_DEPENDENCY = re.compile(r"(@import|url\()\s*['\"]?\s*(?!data:|#)[^'\")\s]", re.I)
+SRCSET_DESCRIPTOR = re.compile(r"^\d+(\.\d+)?[wxh]$")
+# A bar is sized by a unitless numeric custom property or by a percentage above 0 and below 100.
+BAR_STYLE = re.compile(
+    r"(^|;)\s*(width|height|inline-size|block-size)\s*:\s*(?!0+(\.0+)?%)(\d{1,2}(\.\d+)?|0?\.\d+)%"
+    r"|--[\w-]+\s*:\s*[\d.]+%?\s*(;|$)")
 CSS_COMMENT = re.compile(r"/\*.*?\*/", re.S)
-JS_IMPORT = re.compile(r"(\bimport\s[^;]*?\bfrom\s*|\bimport\s*\(\s*|\bimport\s+)['\"](?!data:)([^'\"]+)['\"]")
+CSS_DEPENDENCY = re.compile(r"url\(\s*['\"]?\s*(?!data:|#)[^'\")\s]|@import\s+['\"](?!data:)", re.I)
+JS_COMMENT = re.compile(r"/\*.*?\*/|(^|\s)//[^\n]*", re.S)
+JS_IMPORT = re.compile(
+    r"(^|[;{}\n])\s*import\s+(?:[^;'\"]*?\bfrom\s*)?['\"](?!data:)([^'\"]+)['\"]"
+    r"|\bimport\s*\(\s*['\"](?!data:)([^'\"]+)['\"]\s*\)")
 PRINT_MEDIA = re.compile(r"@media[^{]*\bprint\b", re.I)
 HIDDEN_STYLE = re.compile(r"display\s*:\s*none|visibility\s*:\s*hidden", re.I)
 EMOJI = re.compile("[\U0001F300-\U0001FAFF☀-➿]")
@@ -51,11 +60,18 @@ MAX_LEAD = 900
 LONG_REPORT = 3000
 
 
+def srcset_urls(value):
+    for token in value.split():
+        token = token.strip(",")
+        if token and not SRCSET_DESCRIPTOR.match(token):
+            yield token
+
+
 class Scan(HTMLParser):
     def __init__(self):
         super().__init__(convert_charrefs=True)
         self.stack = []  # (tag, info dict)
-        self.blocks = []  # words per open block
+        self.blocks = []  # text fragments per open block
         self.block_words = []
         self.visible = self.prose = self.lead = 0
         self.seen_structure = False
@@ -63,19 +79,29 @@ class Scan(HTMLParser):
         self.graphics = self.bars = self.tables = self.controls = 0
         self.deps = []
         self.css = []
-        self.missing_alt = self.emoji_headings = self.unlabeled_svg = 0
         self.scripts = []
+        self.missing_alt = self.emoji_headings = self.unlabeled_svg = 0
 
     def inside(self, tags):
         return any(t in tags for t, _ in self.stack)
 
+    def close_block(self):
+        words = len("".join(self.blocks.pop()).split())
+        if words:
+            self.block_words.append(words)
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag not in VOID:
+            self.handle_endtag(tag)
+
     def handle_starttag(self, tag, attrs):
         a = {k: (v or "") for k, v in attrs}
-        parent_shown = not self.stack or self.stack[-1][1]["shown"]
-        rendered = not self.inside({"template", "noscript"})
-        shown = rendered and parent_shown and "hidden" not in a and a.get("aria-hidden") != "true" \
-            and not HIDDEN_STYLE.search(a.get("style", ""))
         style = a.get("style", "")
+        rendered = not self.inside({"template", "noscript"})
+        parent_shown = not self.stack or self.stack[-1][1]["shown"]
+        shown = (rendered and parent_shown and "hidden" not in a and a.get("aria-hidden") != "true"
+                 and not HIDDEN_STYLE.search(style))
         if style:
             self.css.append(style)
         if tag == "title" and rendered and not self.inside({"svg"}):
@@ -89,6 +115,9 @@ class Scan(HTMLParser):
         for key in RESOURCE_ATTRS & a.keys():
             if not INLINE.match(a[key]):
                 self.deps.append(f"<{tag} {key}={a[key]}>")
+        for url in srcset_urls(a.get("srcset", "")):
+            if not INLINE.match(url):
+                self.deps.append(f"<{tag} srcset={url}>")
         if tag in HREF_RESOURCE:
             for key in ("href", "xlink:href"):
                 if a.get(key) and not INLINE.match(a[key]):
@@ -107,18 +136,20 @@ class Scan(HTMLParser):
                 self.missing_alt += 1
             if tag in LEAD_BREAK:
                 self.seen_structure = True
+            if tag in SVG_SHAPES:
+                for t, info in reversed(self.stack):
+                    if t == "svg":
+                        info["shapes"] = True
+                        break
         if tag in VOID:
             return
-        info = {
-            "bar": shown and bool(BAR_STYLE.search(style)), "text": False,
-            "label": bool(a.get("aria-label") or a.get("role") == "img"),
-            "rendered": rendered, "shown": shown,
-        }
+        info = {"bar": shown and bool(BAR_STYLE.search(style)), "text": False, "shapes": False,
+                "label": bool(a.get("aria-label") or a.get("role") == "img"), "shown": shown}
         if tag == "title" and self.stack and self.stack[-1][0] == "svg":
             self.stack[-1][1]["label"] = True
         self.stack.append((tag, info))
         if tag in BLOCKS:
-            self.blocks.append(0)
+            self.blocks.append([])
 
     def handle_endtag(self, tag):
         if tag not in (t for t, _ in self.stack):
@@ -126,19 +157,17 @@ class Scan(HTMLParser):
         while self.stack:
             top, info = self.stack.pop()
             if top in BLOCKS and self.blocks:
-                n = self.blocks.pop()
-                if n:
-                    self.block_words.append(n)
+                self.close_block()
             if info["bar"] and not info["text"]:
-                # A percentage- or custom-property-sized element with no text inside is a bar.
+                # A sized element with no text inside is a bar.
                 self.bars += 1
                 self.seen_structure = True
             if top == "svg" and info["shown"]:
-                # A labeled svg is a data graphic; an unlabeled one is decoration or an accessibility gap.
-                if info["label"]:
+                # A labeled svg with shapes is a data graphic; anything else is decoration or an accessibility gap.
+                if info["label"] and info["shapes"]:
                     self.graphics += 1
                     self.seen_structure = True
-                else:
+                elif not info["label"]:
                     self.unlabeled_svg += 1
             if top == tag:
                 break
@@ -148,10 +177,11 @@ class Scan(HTMLParser):
             self.css.append(data)
         if self.inside({"script"}):
             self.scripts.append(data)
-        if self.inside(HIDDEN):
+        if self.inside(HIDDEN) or (self.stack and not self.stack[-1][1]["shown"]):
             return
-        words = data.split()
-        n = len(" ".join(words))
+        n = len(" ".join(data.split()))
+        if self.blocks and not self.inside(VERBATIM | HEADINGS):
+            self.blocks[-1].append(data)
         if not n:
             return
         for _, info in self.stack:
@@ -161,24 +191,27 @@ class Scan(HTMLParser):
             if EMOJI.search(data):
                 self.emoji_headings += 1
             return
-        if self.blocks and not self.inside(VERBATIM):
-            self.blocks[-1] += len(words)
         if self.inside(STRUCTURED):
             return
         self.prose += n
         if not self.seen_structure:
             self.lead += n
 
+    def finish(self):
+        self.close()
+        while self.blocks:  # blocks left open at the end of the file, such as an unclosed <p>
+            self.close_block()
+
 
 def check(html):
     s = Scan()
     s.feed(html)
-    s.close()
+    s.finish()
     css = CSS_COMMENT.sub("", "\n".join(s.css))
     if CSS_DEPENDENCY.search(css):
         s.deps.append("CSS @import or url() to a file or host")
-    for m in JS_IMPORT.finditer("\n".join(s.scripts)):
-        s.deps.append(f"script import {m.group(2)}")
+    for m in JS_IMPORT.finditer(JS_COMMENT.sub(" ", "\n".join(s.scripts))):
+        s.deps.append(f"script import {m.group(2) or m.group(3)}")
     share = s.prose / s.visible if s.visible else 0.0
     longest = max(s.block_words, default=0)
     fails, warns = [], []
@@ -209,7 +242,7 @@ def check(html):
     if s.visible >= LONG_REPORT and not s.controls:
         warns.append("long report with no filter, toggle, or disclosure; add details on demand")
     if not s.graphics and s.bars < 3:
-        warns.append("no data graphic (svg, canvas, meter, progress, labeled role=img, or bars); numbers and statuses are only text")
+        warns.append("no data graphic (labeled svg, canvas, meter, progress, labeled role=img, or bars); numbers and statuses are only text")
     if s.emoji_headings:
         warns.append(f"{s.emoji_headings} headings use emoji as markers")
     if s.unlabeled_svg:

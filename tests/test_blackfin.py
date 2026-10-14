@@ -244,14 +244,18 @@ class BlackfinTest(unittest.TestCase):
                 '<img srcset="https://example.com/a.png 1x" alt="plot">', '<script src="app.js"></script>',
                 '<style>@import url(theme.css);</style>', '<script type="module">import * as d3 from "https://cdn.example/d3.js";</script>',
                 '<svg role="img" aria-label="x"><image href="https://example.com/p.png"/></svg>', '<svg role="img" aria-label="x"><use href="sprite.svg#i"/></svg>',
+                '<img srcset="data:image/png;base64,AAAA 1x, https://example.com/plot.png 2x" alt="plot">',
             )],
             "no visual encoding": [page(b) for b in (
                 '<div style="width:100%">Finished.</div>', '<template><svg aria-label="chart"></svg></template><p>Finished.</p>',
                 '<svg aria-hidden="true"><path d="M0 0"/></svg><p>Finished.</p>', '<svg style="display:none" aria-label="x"></svg><p>Finished.</p>',
                 '<div hidden><table><tr><td>1</td></tr></table></div><p>Finished.</p>', '<div style="height:100%"></div><p>Finished.</p>',
+                '<div style="--gap:16px"></div><p>Finished.</p>', '<div style="width:0%"></div><p>Finished.</p>',
+                '<svg aria-label="chart"></svg><p>Finished.</p>',
             )],
             "text dump": [page("<div class=card>" + prose * 3 + "</div>"), page("<figure>" + prose * 3 + "</figure>" + table)],
-            "a text block has": page("<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table),
+            "a text block has": [page("<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table),
+                                 head + table + "<p>" + "word " * 101],
             "characters of prose before": page(lead + table),
         }
         for prefix, htmls in cases.items():
@@ -260,7 +264,12 @@ class BlackfinTest(unittest.TestCase):
                 self.assertTrue(any(prefix in f for f in fails), (prefix, html[:120], fails))
 
         self.assertEqual([], report_check.check(page('<div role="img" aria-label="1 of 1 done">■</div>'))[0])
-        self.assertEqual([], report_check.check(page('<style>/* url(x.png) */</style>' + table))[0])
+        for clean in ('<style>/* url(x.png) */</style>', '<style>@import url("data:text/css,body{color:red}");</style>',
+                      '<script>// import x from "https://cdn.example/x.js";\nconst example = \'import x from "old.js";\';</script>',
+                      "<p>" + "w<b>or</b>d " * 35 + "</p>", "<p hidden>" + "word " * 110 + "</p>"):
+            self.assertEqual([], report_check.check(page(clean + table))[0], clean)
+        hidden_padding = "<div class=card>" + ("<p>" + "migration " * 30 + "</p>") * 5 + "</div><pre hidden>" + "word " * 400 + "</pre>"
+        self.assertTrue(any(f.startswith("text dump") for f in report_check.check(page(hidden_padding + table))[0]))
         warns = report_check.check(page(table + '<svg></svg><svg aria-label="x"><title>x</title></svg>'))[1]
         self.assertTrue(any("without aria-label" in w for w in warns), warns)
         warns = report_check.check(page(table + '<style>@media only print { a { color: #000 } }</style>'))[1]
