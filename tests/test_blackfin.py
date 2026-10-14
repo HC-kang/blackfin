@@ -237,8 +237,24 @@ class BlackfinTest(unittest.TestCase):
         self.assertTrue(any(f.startswith("no visual encoding") for f in fails), fails)
         self.assertTrue(any("words" in f for f in fails), fails)
 
-        remote = head + '<link rel=stylesheet href="https://fonts.example/x.css"><table><tr><td>1</td></tr></table></body></html>'
-        self.assertTrue(any(f.startswith("not self-contained") for f in report_check.check(remote)[0]))
+        table = "<table><tr><td>1</td></tr></table>"
+        for dependency in ('<link rel=stylesheet href="https://fonts.example/x.css">', '<link rel=stylesheet href="theme.css">',
+                           '<img srcset="https://example.com/a.png 1x" alt="plot">', '<script src="app.js"></script>'):
+            fails = report_check.check(head + dependency + table + "</body></html>")[0]
+            self.assertTrue(any(f.startswith("not self-contained") for f in fails), dependency)
+
+        for fake in ('<div style="width:100%">Finished.</div>', '<template><svg aria-label="chart"></svg></template><p>Finished.</p>'):
+            fails = report_check.check(head + fake + "</body></html>")[0]
+            self.assertTrue(any(f.startswith("no visual encoding") for f in fails), fake)
+        self.assertEqual([], report_check.check(head + '<div role="img" aria-label="1 of 1 done">■</div></body></html>')[0])
+
+        wrapped = head + "<figure><p>" + "All endpoints migrated successfully. " * 90 + "</p></figure>" + table + "</body></html>"
+        fails = report_check.check(wrapped)[0]
+        self.assertTrue(any(f.startswith("text dump") for f in fails), fails)
+        self.assertTrue(any("words" in f for f in fails), fails)
+
+        warns = report_check.check(head + table + '<svg></svg><svg aria-label="x"><title>x</title></svg></body></html>')[1]
+        self.assertTrue(any("without aria-label" in w for w in warns), warns)
 
     def assertSchema(self, name, data, valid=True):
         with tempfile.NamedTemporaryFile("w", suffix=".json") as artifact:
