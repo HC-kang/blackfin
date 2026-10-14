@@ -2,6 +2,10 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.6.1] - 2026-10-14
+
+- Report template: metadata labels no longer wrap one character per line on narrow screens.
+
 ## [0.6.0] - 2026-10-14
 
 - Add `blackfin-report`: a self-contained HTML report for finished work. The page leads with the verdict and a unit bar, puts open decisions in a picker that composes a reply line, shows numbers beside their comparisons, makes long item lists filterable and sortable, and keeps evidence on demand while gaps stay visible. It ships a template (dark mode, print, Okabe-Ito status colors, keyboard controls), a visual grammar with named default looks to avoid, a stdlib checker (`report_check.py`), and a render checklist.

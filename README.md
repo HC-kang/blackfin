@@ -20,7 +20,7 @@ Node.js/npm is required for the installer. Structured runs additionally use the 
 Install the stable release globally:
 
 ```bash
-npx --yes skills@latest add https://github.com/HC-kang/blackfin/tree/v0.6.0 \
+npx --yes skills@latest add https://github.com/HC-kang/blackfin/tree/v0.6.1 \
   --skill blackfin-atlas --skill blackfin-forge \
   --skill blackfin-vigil --skill blackfin-orchestrator \
   --skill blackfin-report \
@@ -30,7 +30,7 @@ npx --yes skills@latest list --global
 
 The example targets Codex and Claude Code; replace `--agent` with your intended clients that support global installation. Project-only clients such as PromptScript cannot use `--global`.
 
-Rerun the command to update to this release. Use the repository URL without `/tree/v0.6.0` only to follow development on `main`. Each role ships its required schemas, checkpoint, and report resources; install all five for coordinated runs. Grok Build also reads `~/.agents/skills` and `~/.claude/skills`, so it needs no separate target; cloud sessions do not receive globally installed skills.
+Rerun the command to update to this release. Use the repository URL without `/tree/v0.6.1` only to follow development on `main`. Each role ships its required schemas, checkpoint, and report resources; install all five for coordinated runs. Grok Build also reads `~/.agents/skills` and `~/.claude/skills`, so it needs no separate target; cloud sessions do not receive globally installed skills.
 
 ## Use
 
