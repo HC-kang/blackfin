@@ -1,4 +1,5 @@
 import copy
+import importlib.util
 import json
 import re
 from pathlib import Path
@@ -221,6 +222,23 @@ class BlackfinTest(unittest.TestCase):
         orchestrator = (ROOT / "skills/blackfin-orchestrator/SKILL.md").read_text()
         for phrase in ("worktree note", "before completion", "trivial tasks included", "Verify the write"):
             self.assertIn(phrase, orchestrator)
+
+    def test_report_check_blocks_text_dumps_and_passes_template(self):
+        spec = importlib.util.spec_from_file_location("report_check", ROOT / "skills/blackfin-report/scripts/report_check.py")
+        report_check = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(report_check)
+        template = (ROOT / "skills/blackfin-report/assets/report-template.html").read_text()
+        self.assertEqual(([], []), report_check.check(template)[:2])
+
+        head = "<!doctype html><html><head><title>t</title><meta name=viewport content=width=device-width></head><body><h1>Report</h1>"
+        paragraph = "<p>" + "The migration moved most endpoints and some are blocked. " * 12 + "</p>"
+        fails = report_check.check(head + "<div class=card>" + paragraph * 3 + "</div></body></html>")[0]
+        self.assertTrue(any(f.startswith("text dump") for f in fails), fails)
+        self.assertTrue(any(f.startswith("no visual encoding") for f in fails), fails)
+        self.assertTrue(any("words" in f for f in fails), fails)
+
+        remote = head + '<link rel=stylesheet href="https://fonts.example/x.css"><table><tr><td>1</td></tr></table></body></html>'
+        self.assertTrue(any(f.startswith("not self-contained") for f in report_check.check(remote)[0]))
 
     def assertSchema(self, name, data, valid=True):
         with tempfile.NamedTemporaryFile("w", suffix=".json") as artifact:

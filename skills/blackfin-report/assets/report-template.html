@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>search-indexer v3 업그레이드 — 결과 보고</title>
+<style>
+/* Tokens. Status hues follow the Okabe-Ito colorblind-safe set; every status also carries an icon and a word. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --ink: #1b1f24; --muted: #59636e; --line: #d8dee4;
+  --accent: #0072b2; --ok: #007a5a; --warn: #b26b00; --fail: #c4421a; --info: #0072b2;
+  --ok-bg: #e3f4ee; --warn-bg: #fdf1dc; --fail-bg: #fbe6df; --info-bg: #e2eff8;
+  --radius: 8px; --gap: 16px;
+  --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", "Segoe UI", sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1216; --surface: #171b21; --ink: #e6e9ed; --muted: #9aa4af; --line: #2c333b;
+    --accent: #56b4e9; --ok: #3ccf9f; --warn: #f0b84b; --fail: #ff7b5c; --info: #56b4e9;
+    --ok-bg: #12302a; --warn-bg: #33270f; --fail-bg: #3a1d16; --info-bg: #102838;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font); }
+main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 40px; }
+h1 { overflow-wrap: anywhere; font-size: clamp(22px, 3.2vw, 30px); line-height: 1.25; margin: 6px 0; }
+h2 { font-size: 17px; margin: 0 0 12px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); }
+h3 { font-size: 14px; margin: 16px 0 6px; }
+h2 small, .muted { color: var(--muted); font-weight: 400; font-size: 13px; }
+code, pre, .mono { font-family: var(--mono); font-size: 13px; }
+section { min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; }
+p, li, dd { max-width: 72ch; }
+
+/* Status: icon + word + color, never color alone. */
+.st { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.st-ok { color: var(--ok); background: var(--ok-bg); } .st-ok::before { content: "✓"; }
+.st-warn { color: var(--warn); background: var(--warn-bg); } .st-warn::before { content: "!"; }
+.st-fail { color: var(--fail); background: var(--fail-bg); } .st-fail::before { content: "✕"; }
+.st-info { color: var(--info); background: var(--info-bg); } .st-info::before { content: "i"; }
+
+/* Verdict: one sentence, the unit bar, the scope line. */
+.units { display: flex; gap: 3px; margin: 14px 0 6px; }
+.units i { flex: 1; height: 10px; border-radius: 2px; background: var(--ok); }
+.units i.warn { background: var(--warn); } .units i.fail { background: var(--fail); }
+.meta { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 0; font-size: 13px; }
+.meta div { display: flex; gap: 6px; } .meta dt { color: var(--muted); } .meta dd { margin: 0; }
+
+/* Needs you: each decision is a choice the reader can make in the page. */
+.decisions { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
+.decision .options { display: grid; gap: 8px; margin-top: 10px; }
+.decision button { text-align: left; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; }
+.decision button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.decision button b { display: block; }
+.reply { display: flex; gap: 8px; margin-top: 14px; align-items: center; }
+.reply output { flex: 1; font-family: var(--mono); font-size: 13px; padding: 8px 10px; border: 1px dashed var(--line); border-radius: var(--radius); min-height: 36px; }
+.btn { font: inherit; font-size: 13px; padding: 7px 12px; border-radius: var(--radius); border: 1px solid var(--accent); background: var(--accent); color: #fff; cursor: pointer; }
+
+/* KPIs: every number carries its comparison. */
+.kpis { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); }
+.kpi .value { font-size: 26px; font-weight: 700; }
+.kpi .cmp { display: grid; gap: 4px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.kpi .cmp span { display: grid; grid-template-columns: 44px 1fr 56px; align-items: center; gap: 6px; }
+.track { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+.track i { display: block; height: 100%; width: calc(var(--v) * 1%); background: var(--muted); }
+.track i.now { background: var(--accent); }
+
+/* Bars: one row per category, sorted by value. */
+.bars { display: grid; gap: 6px; }
+.bars > div { display: grid; grid-template-columns: minmax(90px, 220px) 1fr 56px; gap: 10px; align-items: center; font-size: 13px; }
+
+/* Table with filter chips and sortable headers. */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.chips button { font: inherit; font-size: 12px; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: inherit; cursor: pointer; }
+.chips button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.table-wrap { overflow-x: auto; } .table-wrap table { min-width: 560px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th button { all: unset; cursor: pointer; font-weight: 600; }
+th[aria-sort="ascending"] button::after { content: " ▲"; } th[aria-sort="descending"] button::after { content: " ▼"; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tr[hidden] { display: none; }
+
+/* Timeline. */
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.timeline li { display: grid; grid-template-columns: 64px 1fr; gap: 12px; }
+.timeline time { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+
+/* Evidence: details on demand. */
+details { border-top: 1px solid var(--line); padding: 8px 0; }
+summary { cursor: pointer; font-weight: 600; }
+pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overflow-x: auto; white-space: pre-wrap; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+@media print {
+  body { background: #fff; } section { break-inside: avoid; border-color: #bbb; }
+  .chips, .reply .btn { display: none; } details > * { display: block; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <span class="st st-warn">부분 완료 · 결정 1건</span>
+  <h1>v3 인덱서로 9개 컬렉션 중 8개를 옮겼고, 검색 p95가 38% 줄었습니다.</h1>
+  <div class="units" role="img" aria-label="9개 중 완료 8, 막힘 1">
+    <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="warn"></i>
+  </div>
+  <dl class="meta"><div><dt>막힘</dt><dd><code>audit_logs</code> 재색인 시점</dd></div><div><dt>기간</dt><dd>10월 8일~9일</dd></div><div><dt>브랜치</dt><dd><code>feat/indexer-v3</code></dd></div></dl>
+</header>
+
+<section aria-labelledby="needs">
+  <h2 id="needs">결정이 필요합니다 <small>선택하면 아래에 답장 문구가 만들어집니다</small></h2>
+  <div class="decisions">
+    <div class="decision card" data-decision="1">
+      <b>1. <code>audit_logs</code> 재색인 시점</b>
+      <div class="muted">전체 재색인에 약 6시간이 걸리고, 그동안 감사 검색이 느려집니다.</div>
+      <div class="options">
+        <button type="button" data-option="A" aria-pressed="false"><b>A. 오늘 밤 실행</b><span class="muted">야간 트래픽 기준 영향 작음</span></button>
+        <button type="button" data-option="B" aria-pressed="false"><b>B. 주말로 연기</b><span class="muted">v2 인덱서 1개를 그때까지 유지</span></button>
+      </div>
+    </div>
+  </div>
+  <div class="reply">
+    <output id="reply" aria-live="polite"></output>
+    <button type="button" class="btn" id="copy">답장 복사</button>
+  </div>
+</section>
+
+<section aria-labelledby="overview">
+  <h2 id="overview">핵심 수치 <small>staging, 30분 부하 3회 평균</small></h2>
+  <div class="kpis">
+    <div class="kpi">
+      <div class="muted">검색 p95</div>
+      <div class="value">212 → 131 ms</div>
+      <div class="cmp">
+        <span>이전<div class="track"><i style="--v:100"></i></div>212</span>
+        <span>이후<div class="track"><i class="now" style="--v:62"></i></div>131</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="muted">테스트</div>
+      <div class="value">412 / 414</div>
+      <div class="cmp"><span>통과<div class="track"><i class="now" style="--v:99.5"></i></div>99.5%</span></div>
+    </div>
+    <div class="kpi">
+      <div class="muted">인덱스 크기</div>
+      <div class="value">48 → 31 GB</div>
+      <div class="cmp">
+        <span>이전<div class="track"><i style="--v:100"></i></div>48</span>
+        <span>이후<div class="track"><i class="now" style="--v:65"></i></div>31</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="where">
+  <h2 id="where">p95 개선 폭이 큰 컬렉션 <small>ms 감소량</small></h2>
+  <div class="bars">
+    <div><span>products</span><div class="track"><i class="now" style="--v:100"></i></div><span class="mono">−121</span></div>
+    <div><span>orders</span><div class="track"><i class="now" style="--v:71"></i></div><span class="mono">−86</span></div>
+    <div><span>users</span><div class="track"><i class="now" style="--v:33"></i></div><span class="mono">−40</span></div>
+  </div>
+</section>
+
+<section aria-labelledby="items">
+  <h2 id="items">컬렉션별 상태</h2>
+  <div class="chips" data-filter-for="items-table">
+    <button type="button" data-filter="all" aria-pressed="true">전체 9</button>
+    <button type="button" data-filter="ok" aria-pressed="false">완료 8</button>
+    <button type="button" data-filter="warn" aria-pressed="false">막힘 1</button>
+  </div>
+  <div class="table-wrap">
+    <table id="items-table" data-sortable>
+      <thead><tr><th><button type="button">컬렉션</button></th><th><button type="button">상태</button></th><th class="num"><button type="button">문서 수</button></th><th class="num"><button type="button">p95 (ms)</button></th><th>비고</th></tr></thead>
+      <tbody>
+        <tr data-status="ok"><td><code>products</code></td><td><span class="st st-ok">완료</span></td><td class="num">1,204,331</td><td class="num">88</td><td></td></tr>
+        <tr data-status="ok"><td><code>orders</code></td><td><span class="st st-ok">완료</span></td><td class="num">3,880,102</td><td class="num">140</td><td>날짜 필드 매핑 변경</td></tr>
+        <tr data-status="warn"><td><code>audit_logs</code></td><td><span class="st st-warn">막힘</span></td><td class="num">41,092,770</td><td class="num">—</td><td>재색인 시점 결정 대기</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section aria-labelledby="risks">
+  <h2 id="risks">배포 전에 확인할 위험</h2>
+  <table>
+    <thead><tr><th>위험</th><th>상태</th><th>확인 방법</th></tr></thead>
+    <tbody>
+      <tr><td>날짜 필드 매핑 변경으로 기존 쿼리 3개가 빈 결과를 낼 수 있음</td><td><span class="st st-warn">미확인</span></td><td><code>scripts/replay-queries.sh --since 7d</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="when">
+  <h2 id="when">진행</h2>
+  <ol class="timeline">
+    <li><time>10-08</time><div>컬렉션 1~6 이전 <span class="st st-ok">완료</span></div></li>
+    <li><time>10-09</time><div>Vigil 리뷰 1차 FAIL(매핑 누락) → 수리 → 2차 PASS <span class="st st-ok">PASS</span></div></li>
+  </ol>
+</section>
+
+<section aria-labelledby="evidence">
+  <h2 id="evidence">근거와 남은 공백 <small>명령을 펼치면 관찰한 출력이 보입니다</small></h2>
+  <details><summary><code>pnpm test --filter indexer</code> → 412 passed, 2 skipped</summary><pre>Test Files  38 passed (38)
+     Tests  412 passed | 2 skipped (414)</pre></details>
+  <h3>확인하지 못한 것</h3>
+  <ul><li>prod 트래픽 패턴에서의 p95: staging에서만 측정했습니다.</li></ul>
+</section>
+
+</main>
+<script>
+// Sortable tables: click a header to sort by that column.
+document.querySelectorAll("table[data-sortable] th button").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const th = btn.closest("th"), table = th.closest("table"), i = [...th.parentNode.children].indexOf(th);
+    const dir = th.getAttribute("aria-sort") === "ascending" ? "descending" : "ascending";
+    table.querySelectorAll("th").forEach((h) => h.removeAttribute("aria-sort"));
+    th.setAttribute("aria-sort", dir);
+    const key = (tr) => { const t = tr.children[i].innerText.trim(), n = parseFloat(t.replace(/[^\d.-]/g, "")); return isNaN(n) ? t : n; };
+    const rows = [...table.tBodies[0].rows].sort((a, b) => (key(a) > key(b) ? 1 : key(a) < key(b) ? -1 : 0) * (dir === "ascending" ? 1 : -1));
+    rows.forEach((r) => table.tBodies[0].appendChild(r));
+  });
+});
+// Filter chips: show rows whose data-status matches.
+document.querySelectorAll("[data-filter-for]").forEach((chips) => {
+  const table = document.getElementById(chips.dataset.filterFor);
+  chips.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    chips.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    [...table.tBodies[0].rows].forEach((r) => { r.hidden = b.dataset.filter !== "all" && r.dataset.status !== b.dataset.filter; });
+  });
+});
+// Decisions: pick an option per decision; the reply line collects the picks.
+const picks = {};
+document.querySelectorAll(".decision").forEach((d) => {
+  d.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-option]"); if (!b) return;
+    d.querySelectorAll("button[data-option]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    picks[d.dataset.decision] = b.dataset.option;
+    document.getElementById("reply").textContent = Object.keys(picks).sort().map((k) => `결정 ${k}: ${picks[k]}`).join(", ");
+  });
+});
+document.getElementById("copy")?.addEventListener("click", async (e) => {
+  const text = document.getElementById("reply").textContent; if (!text) return;
+  try { await navigator.clipboard.writeText(text); e.target.textContent = "복사됨"; }
+  catch { const r = document.createRange(); r.selectNodeContents(document.getElementById("reply")); getSelection().removeAllRanges(); getSelection().addRange(r); e.target.textContent = "선택됨, ⌘C"; }
+});
+</script>
+</body>
+</html>

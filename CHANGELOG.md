@@ -2,6 +2,15 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.6.0] - 2026-10-14
+
+- Add `blackfin-report`: a self-contained HTML report for finished work. The page leads with the verdict and a unit bar, puts open decisions in a picker that composes a reply line, shows numbers beside their comparisons, makes long item lists filterable and sortable, and keeps evidence on demand while gaps stay visible. It ships a template (dark mode, print, Okabe-Ito status colors, keyboard controls), a visual grammar with named default looks to avoid, a stdlib checker (`report_check.py`), and a render checklist.
+- Worktree notes become the shared record: reconcile the note with branch, HEAD, and uncommitted files on start; replace a stale note; treat an unreadable note as unknown; read sibling notes before shared changes; write `state: change | command → result @sha | 다음: next action` rebuilt from the repository; set the attention flag when the user must act; keep the report path in the note.
+- Evidence: implementer-written passing tests locate behavior; checks that fail with the change disabled, or owner-fixed checks, are stronger; syntax-only checks and commands that failed to start are not evidence. Forge shows fail-before and pass-after for bug fixes, names where the change lives, and lists unread files and unrun checks.
+- Review and convergence: delegate explicitly to a new Vigil each round, preferring another agent family for a high-risk second round; Vigil disables the change to confirm new tests fail and marks findings blocking (with reproduction) or non-blocking. Non-blocking and out-of-scope work goes to one follow-up list; the same unfinished item continues automatically at most twice.
+- Parallel implementation is for long, separable work; parallel branches merge by `git merge-tree` replay and are gated on the merged result. Handoff briefs carry state and evidence instead of the transcript, and the receiver restates the finish line.
+- Research and limits are in [October evidence](references/harness-evidence-2026-10.md). Artifact schemas remain 0.2.0; checkpoint format remains v1. v0.5.0 was not tagged separately; its changes ship in this release.
+
 ## [0.5.0] - 2026-09-23
 
 - Align with the Claude Opus 5.5 guide (2026-09-22) and the GPT-6 family prompting guide (Astra, Sol, Luna). Evidence and limits are in [harness evidence](references/harness-evidence-2026-09.md#update-2026-09-23).

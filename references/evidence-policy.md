@@ -1,6 +1,6 @@
 # Evidence policy
 
-Prefer observable runtime behavior, integration/E2E execution, deterministic tests, static analysis, code inspection, then agent explanation. Choose evidence appropriate to the criterion; higher-order contradictory observations win. Forge claims never prove acceptance.
+Prefer observable runtime behavior, integration/E2E execution, deterministic tests, static analysis, code inspection, then agent explanation. Choose evidence appropriate to the criterion; higher-order contradictory observations win. Forge claims never prove acceptance. A passing test written by the implementer locates behavior; a check that fails with the change disabled and passes with it, or one fixed by the acceptance owner before implementation, is stronger. A syntax-only check or a command that failed to start is not evidence.
 
 Bind evidence to the evaluated revision and relevant command/environment. Missing required evidence is BLOCKED, observed mandatory failure is FAIL, and all mandatory criteria passing is PASS. Optional failures remain visible and cannot excuse a mandatory failure.
 
