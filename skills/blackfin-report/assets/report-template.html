@@ -45,7 +45,7 @@ p, li, dd { max-width: 72ch; }
 .units i { flex: 1; height: 10px; border-radius: 2px; background: var(--ok); }
 .units i.warn { background: var(--warn); } .units i.fail { background: var(--fail); }
 .meta { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 0; font-size: 13px; }
-.meta div { display: flex; gap: 6px; } .meta dt { color: var(--muted); } .meta dd { margin: 0; }
+.meta div { display: flex; gap: 6px; } .meta dt { color: var(--muted); flex: none; } .meta dd { margin: 0; }
 
 /* Needs you: each decision is a choice the reader can make in the page. */
 .decisions { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr)); }
