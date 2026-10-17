@@ -28,7 +28,7 @@ Models fall back on a few default looks. The grammar names them (paragraph cards
 Page text follows the user's writing rules, and a writing skill for the page's language (such as `k-ste` for Korean) when one is installed. Without such rules, apply ASD-STE100 (Simplified Technical English) in the user's language:
 
 - A prose sentence is complete and carries one idea: at most 20 words in an instruction, 25 in a description. Headings, labels, chips, and table cells are short noun phrases; one that grows into a clause becomes a full sentence.
-- Keep one register for body text and one for interface text. In Korean, body text is a document in 한다체, buttons and hints use 합니다체, and labels are noun phrases; never use casual or note-style endings.
+- Keep one register for body text and one for interface text. In Korean, body text is a document in 한다체, buttons (decision options included) and hints use 합니다체, and labels are noun phrases; never use casual or note-style endings.
 - Use active voice with the actor named, one term for each thing, and one verb for each action.
 - Prose holds only what structure cannot: a reason, a trade-off, a caveat. A paragraph has at most three sentences; three or more parallel items become a list or a table.
 - Use at most one hedge per sentence, and no greetings, self-narration, filler, slogans, or exclamations.
