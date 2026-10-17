@@ -184,6 +184,7 @@ class BlackfinTest(unittest.TestCase):
         clean["criteria"][0].pop("reproduction")
         clean["checks"][0]["result"] = "PASS"
         self.assertSchema("evaluation", clean)
+        self.assertSchema("evaluation", dict(clean, blockers=["Reviewed state drifted"]), valid=False)
         del evaluation["criteria"][0]["reproduction"]
         self.assertSchema("evaluation", evaluation, valid=False)
 
@@ -229,6 +230,9 @@ class BlackfinTest(unittest.TestCase):
         spec.loader.exec_module(report_check)
         template = (ROOT / "skills/blackfin-report/assets/report-template.html").read_text()
         self.assertEqual(([], []), report_check.check(template)[:2])
+        # Printing must not drop rows a filter hid, because print hides the filter chips.
+        print_css = re.search(r"@media print \{(.*?)\n\}", template, re.S).group(1)
+        self.assertIn("tr[hidden] { display: table-row; }", print_css)
 
         title, viewport = "<title>t</title>", "<meta name=viewport content=width=device-width>"
         head = f"<!doctype html><html><head>{title}{viewport}</head><body><h1>Report</h1>"

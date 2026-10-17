@@ -20,7 +20,7 @@ Node.js/npm is required for the installer. Structured runs additionally use the 
 Install the stable release globally:
 
 ```bash
-npx --yes skills@latest add https://github.com/HC-kang/blackfin/tree/v0.7.0 \
+npx --yes skills@latest add https://github.com/HC-kang/blackfin/tree/v0.8.0 \
   --skill blackfin-atlas --skill blackfin-forge \
   --skill blackfin-vigil --skill blackfin-orchestrator \
   --skill blackfin-report \
@@ -30,7 +30,7 @@ npx --yes skills@latest list --global
 
 The example targets Codex and Claude Code; replace `--agent` with your intended clients that support global installation. Project-only clients such as PromptScript cannot use `--global`.
 
-Rerun the command to update to this release. Use the repository URL without `/tree/v0.7.0` only to follow development on `main`. Each role ships its required schemas, checkpoint, and report resources; install all five for coordinated runs. Grok Build also reads `~/.agents/skills` and `~/.claude/skills`, so it needs no separate target; cloud sessions do not receive globally installed skills.
+Rerun the command to update to this release. Use the repository URL without `/tree/v0.8.0` only to follow development on `main`. Each role ships its required schemas, checkpoint, and report resources; install all five for coordinated runs. Grok Build also reads `~/.agents/skills` and `~/.claude/skills`, so it needs no separate target; cloud sessions do not receive globally installed skills.
 
 ## Use
 
@@ -48,7 +48,7 @@ Vigil starts each criterion at FAIL, probes behavior beyond the shipped tests, a
 
 Under Orca, read the worktree note on start or resume and replace it when it disagrees with the repository. Update it at meaningful transitions and before completion as `state: change | command → result @sha | 다음: next action`, set the card's attention flag when the user must act, and verify it saved. Chat and project memory do not replace the note.
 
-Report builds one offline HTML file from a shipped template: verdict and unit bar first, then open decisions as a picker that composes a reply, comparison bars, a filterable table, and evidence on demand. Page text follows ASD-STE100 wording in the user's language. A stdlib checker blocks text dumps, remote resources, and missing encodings and warns on long sentences, and the rendered page is checked against a short list before delivery. Pages go to `.blackfin/reports/` and their path goes into the worktree note.
+Report builds one offline HTML file from a shipped template: verdict and unit bar first, then open decisions as a picker that composes a reply, comparison bars, a filterable table, and evidence on demand. Page text follows the user's writing rules or an installed writing skill, with ASD-STE100 wording as the fallback. A stdlib checker blocks text dumps, remote resources, and missing encodings and warns on long sentences, and the rendered page is checked against a short list before delivery. Pages go to `.blackfin/reports/` and their path goes into the worktree note.
 
 See [task classification](references/task-classification.md), [evidence](references/evidence-policy.md), [handoffs](references/handoff-protocol.md), and [the Orca example](references/orca-integration.md) when relevant. Repository-local commands, conventions, and domain rules remain authoritative.
 

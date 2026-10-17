@@ -16,7 +16,7 @@ Forge's [handoff schema](../schemas/generator-handoff.schema.json) requires pass
 
 For CLEAN revisions, the checkpoint tool must report matching HEAD and no changed files; omit the checkpoint field. For DIRTY revisions, use the canonical [checkpoint](checkpoint.md). Vigil verifies state before and after evaluation, and the coordinator rechecks before acceptance. Different source state makes the result stale.
 
-Validate [Vigil's evaluation](../schemas/evaluation.schema.json). PASS requires all mandatory criteria and their evidence; FAIL includes reproduction; BLOCKED names the missing prerequisite. Forge may not accept its own behavioral changes and Vigil may not repair implementation.
+Validate [Vigil's evaluation](../schemas/evaluation.schema.json). PASS requires all mandatory criteria and their evidence and no blockers; FAIL includes reproduction; BLOCKED names the missing prerequisite. Forge may not accept its own behavioral changes and Vigil may not repair implementation.
 
 Persist artifacts and the consumed repair count. Every failed-gate or Vigil-FAIL transition back to implementation consumes one cycle, default two after the initial attempt; session reuse or interruption does not reset it. Gate failure returns command/output without fabricating a Vigil report. Contract replacement invalidates prior evidence and cannot silently reset the repair budget.
 

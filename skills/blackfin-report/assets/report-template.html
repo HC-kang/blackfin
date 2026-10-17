@@ -99,6 +99,7 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
     --ok-bg: #fff; --warn-bg: #fff; --fail-bg: #fff; --info-bg: #fff; }
   section { break-inside: avoid; }
   .chips, .reply { display: none; }
+  tr[hidden] { display: table-row; }
   details::details-content { content-visibility: visible; }
 }
 </style>
@@ -108,22 +109,22 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
 
 <header>
   <span class="st st-warn">부분 완료, 결정 1건</span>
-  <h1>v3 인덱서로 9개 컬렉션 중 8개를 옮겼습니다. 검색 p95는 38% 줄었습니다.</h1>
+  <h1>v3 인덱서로 9개 컬렉션 중 8개를 옮겼다. 검색 p95는 38% 줄었다.</h1>
   <div class="units" role="img" aria-label="9개 중 완료 8, 막힘 1">
     <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="warn"></i>
   </div>
-  <dl class="meta"><div><dt>막힘</dt><dd><code>audit_logs</code> 재색인 시점</dd></div><div><dt>기간</dt><dd>10월 8일~9일</dd></div><div><dt>브랜치</dt><dd><code>feat/indexer-v3</code></dd></div></dl>
+  <dl class="meta"><div><dt>막힘</dt><dd><code>audit_logs</code> 재색인 시점</dd></div><div><dt>기간</dt><dd>10월 8-9일</dd></div><div><dt>브랜치</dt><dd><code>feat/indexer-v3</code> <code>4f2a91c</code></dd></div><div><dt>되돌리기</dt><dd><code>INDEXER=v2</code>로 다시 배포</dd></div></dl>
 </header>
 
 <section aria-labelledby="needs">
-  <h2 id="needs">결정이 필요합니다 <small>선택하면 아래에 답장 문구가 만들어집니다</small></h2>
+  <h2 id="needs">필요한 결정 <small>선택하면 아래에 답장 문구가 만들어집니다</small></h2>
   <div class="decisions">
     <div class="decision card" data-decision="1">
       <b>1. <code>audit_logs</code> 재색인 시점</b>
-      <div class="muted">전체 재색인에 약 6시간이 걸립니다. 그동안 감사 검색이 느려집니다.</div>
+      <div class="muted">전체 재색인에 약 6시간이 걸린다. 그동안 감사 검색이 느려진다.</div>
       <div class="options">
-        <button type="button" data-option="A" aria-pressed="false"><b>A. 오늘 밤 실행</b><span class="muted">야간 트래픽 기준으로 영향이 작습니다.</span></button>
-        <button type="button" data-option="B" aria-pressed="false"><b>B. 주말로 연기</b><span class="muted">그때까지 v2 인덱서 1개를 유지합니다.</span></button>
+        <button type="button" data-option="A" aria-pressed="false"><b>A. 오늘 밤 실행</b><span class="muted">야간 트래픽 기준으로 영향이 작다.</span></button>
+        <button type="button" data-option="B" aria-pressed="false"><b>B. 주말로 연기</b><span class="muted">그때까지 v2 인덱서 1개를 유지한다.</span></button>
       </div>
     </div>
   </div>
@@ -199,7 +200,7 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
   <table>
     <thead><tr><th>위험</th><th>상태</th><th>확인 방법</th></tr></thead>
     <tbody>
-      <tr><td>날짜 필드 매핑이 바뀌어 기존 쿼리 3개가 빈 결과를 낼 수 있습니다.</td><td><span class="st st-warn">미확인</span></td><td><code>scripts/replay-queries.sh --since 7d</code></td></tr>
+      <tr><td>날짜 필드 매핑이 바뀌어 기존 쿼리 3개가 빈 결과를 낼 수 있다.</td><td><span class="st st-warn">미확인</span></td><td><code>scripts/replay-queries.sh --since 7d</code></td></tr>
     </tbody>
   </table>
 </section>
@@ -217,7 +218,7 @@ pre { background: var(--bg); padding: 10px; border-radius: var(--radius); overfl
   <details><summary><code>pnpm test --filter indexer</code> → 412 passed, 2 skipped</summary><pre>Test Files  38 passed (38)
      Tests  412 passed | 2 skipped (414)</pre></details>
   <h3>확인하지 못한 것</h3>
-  <ul><li>prod 트래픽 패턴에서의 p95: staging에서만 측정했습니다.</li></ul>
+  <ul><li>prod 트래픽 패턴에서의 p95: staging에서만 측정했다.</li></ul>
 </section>
 
 </main>
