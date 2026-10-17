@@ -233,6 +233,12 @@ class BlackfinTest(unittest.TestCase):
         # Printing must not drop rows a filter hid, because print hides the filter chips.
         print_css = re.search(r"@media print \{(.*?)\n\}", template, re.S).group(1)
         self.assertIn("tr[hidden] { display: table-row; }", print_css)
+        # Korean feedback the script writes into buttons is interface text, so it uses 합니다체.
+        script = re.search(r"<script>(.*?)</script>", template, re.S).group(1)
+        feedback = re.findall(r'textContent = "([^"]*[가-힣][^"]*)"', script)
+        self.assertTrue(feedback)
+        for text in feedback:
+            self.assertRegex(text, r"(니다|십시오)\.$")
 
         title, viewport = "<title>t</title>", "<meta name=viewport content=width=device-width>"
         head = f"<!doctype html><html><head>{title}{viewport}</head><body><h1>Report</h1>"

@@ -263,8 +263,8 @@ document.querySelectorAll(".decision").forEach((d) => {
 addEventListener("beforeprint", () => document.querySelectorAll("details").forEach((d) => { d.open = true; }));
 document.getElementById("copy")?.addEventListener("click", async (e) => {
   const text = document.getElementById("reply").textContent; if (!text) return;
-  try { await navigator.clipboard.writeText(text); e.target.textContent = "복사됨"; }
-  catch { const r = document.createRange(); r.selectNodeContents(document.getElementById("reply")); getSelection().removeAllRanges(); getSelection().addRange(r); e.target.textContent = "선택됨, ⌘C"; }
+  try { await navigator.clipboard.writeText(text); e.target.textContent = "복사했습니다."; }
+  catch { const r = document.createRange(); r.selectNodeContents(document.getElementById("reply")); getSelection().removeAllRanges(); getSelection().addRange(r); e.target.textContent = "선택했습니다. 직접 복사하십시오."; }
 });
 </script>
 </body>
