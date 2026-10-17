@@ -64,7 +64,8 @@
                 }
               ]
             }
-          }
+          },
+          "blockers": { "type": "array", "maxItems": 0 }
         }
       }
     },

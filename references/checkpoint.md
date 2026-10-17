@@ -1,6 +1,6 @@
 # Dirty worktree checkpoint
 
-Use this protocol only when `revision.worktreeState` is `DIRTY`. A clean revision is identified by `revision.head` alone.
+The tool checks both states. Only a `DIRTY` revision carries a checkpoint; a `CLEAN` revision is identified by `revision.head` plus the tool's empty `changedFiles`, as the last paragraph describes.
 
 Run the copy of `scripts/blackfin_checkpoint.py` shipped with the active Forge or Vigil skill:
 

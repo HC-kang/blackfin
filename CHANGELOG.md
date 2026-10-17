@@ -2,6 +2,14 @@
 
 All notable Blackfin behavior changes are recorded here. Blackfin follows semantic versioning because skill changes alter agent behavior.
 
+## [0.8.0] - 2026-10-17
+
+- Review convergence: a later Vigil round reviews the repair diff and checks each earlier blocking finding; a defect outside the repair diff that breaks no acceptance criterion is non-blocking. Findings name the defect class, leave out style-only remarks, and the result starts with the blocking count. Vigil runs as a subagent without the conversation, never a fork. Anthropic reported that about 59% of re-review findings were code present since the first pass.
+- Evidence: Vigil copies new tests into the exported base revision and requires them to fail at the assertion; a test-only stand-in proves nothing, so the shipped code path must produce the behavior. Forge's new tests assert an observable outcome. The evaluation schema rejects `PASS` with blockers.
+- Orchestrator: rows run from least to most consequential and the lowest applicable row wins; each return to Forge consumes one repair however many findings it carries; a step that fails twice the same way changes approach or model; waiting on a live worker in a supervised Run follows Orca's wait rules. Long runs keep the finish line, route, approvals, user constraints, and repair count in the task file, because compaction drops constraints. When orca-operator is installed it owns card mechanics.
+- Reports: page text follows the user's writing rules or an installed writing skill such as `k-ste`; the fallback for Korean is 한다체 body text, 합니다체 sentences in controls and hints (decision options, button feedback), and noun-phrase labels and button names. The verdict names where the change lives and how to undo it. The description excludes app pages. Printing shows rows a filter hid. The exclusion step runs only in a Git repository.
+- Checkpoint card states that the tool checks both states and only `DIRTY` carries a checkpoint. Research and limits are in [October evidence](references/harness-evidence-2026-10.md#update-2026-10-17). Artifact schemas remain 0.2.0; checkpoint format remains v1.
+
 ## [0.7.0] - 2026-10-14
 
 - Report pages follow ASD-STE100 wording in the user's language: complete one-idea sentences (20 words for instructions, 25 for descriptions), one register across the page (in Korean, 합니다체 prose and noun-phrase labels), active voice, one term per thing and one verb per action, at most one hedge, no filler, and every condition and number kept. The checker warns on sentences over 25 words; the template text follows the same rules.

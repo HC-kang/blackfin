@@ -1,6 +1,6 @@
 # Task classification
 
-The coordinator asks two questions and takes the highest row that applies: what breaks if this change is wrong, and how strong is the verification available? Model capability never lowers a row.
+The coordinator asks two questions and takes the lowest row that applies (rows run from least to most consequential): what breaks if this change is wrong, and how strong is the verification available? Model capability never lowers a row.
 
 | Class | Signals | Route |
 | --- | --- | --- |

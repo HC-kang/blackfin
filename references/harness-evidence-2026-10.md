@@ -46,3 +46,25 @@ Four baseline runs without the report skill (Codex and Claude, a structured migr
 ## Limits
 
 Most paper results come from single studies, several small. The checker thresholds are calibrated on six vendor examples and these runs; they are judgment calls. Grok could not be exercised because the local CLI was not signed in.
+
+## Update 2026-10-17
+
+Fifth pass, behind v0.8.0: a fresh Codex read-only audit of the skill set (14 findings; 9 reproduced or confirmed against the source, 5 deferred), two research agents (skill authoring; workflow know-how since 2026-07), and fresh-session trigger probes. Quotes marked "checked" were re-read on the raw page in this session; the rest rely on the research agents' raw-page reads.
+
+| Change | Evidence | Strength |
+| --- | --- | --- |
+| A later Vigil round reviews the repair diff and earlier blocking findings; pre-existing defects that break no criterion are non-blocking; findings name the class | Anthropic, How the Claude Code team does code review (2026-10-15, checked): "about 59% of it was code that had been there since the reviewer's first pass"; a round cap plus "Diff-only re-review after the first few passes" raised one-round pass from 65% to 78%. Matches the v0.6.0 four-round Vigil loop. | Official, internal data |
+| Leave out style-only findings; start with the count | Same post (checked): findings "only about style, diagnostics, or cleanup get dropped"; summaries start "with a count". | Official |
+| Vigil is never a fork | Claude Code 2.1.302 changelog (2026-10-16, checked): fork subagents are on by default in `claude -p`, the SDK, desktop, and VS Code; a fork reuses the conversation. | Official |
+| The task file keeps finish line, route, approvals, constraints, repairs | Lost in Context Compaction, arXiv 2608.11242 (checked): compactors "retain only 17% of injected SCs on average"; 30/100 sessions deleted email without approval after compaction. | Controlled benchmark |
+| The shipped code path must produce the behavior | Building to the Test, arXiv 2606.28430 (checked): with the oracle visible, the score was near-perfect "from a demo holding the tested behavior directly". 18 runs. | Small study |
+| New tests assert an outcome | All Smoke, No Alarm, arXiv 2606.18168 (checked abstract): 86,156 agent-authored test-file patches; weak or missing oracles were common. | Large empirical study |
+| Change approach or model after the same failure twice | Anthropic, Spending your effort and What a task costs on Opus 5.5 (2026-09-25): more effort "does not fix when the model has the wrong approach". | Official, internal eval |
+| A trigger must name something in the model's context; use a SessionStart hook for Orca | Local probes (2026-10-17): fresh `claude -p` ×2 and `codex exec` ×1 did a file task in an Orca worktree without loading orca-operator or touching the card; the cue was an env var. Claude Code skills docs (checked): a loaded skill is not re-read on later turns. Claude and Codex hooks docs (checked): SessionStart plain stdout becomes context. | Operational evidence, official docs |
+| Name exact flags | orca-operator never named `--workspace-status`; guessing `--status` failed. arXiv 2610.04832: rules naming a command or path held across model generations. | Operational evidence, controlled benchmark |
+| The report description excludes app pages | openai/codex #33164 (2026-07-14, checked): a visualization skill "over-triggers on standalone HTML requests". | Anecdote |
+| Report the evaluated location and the undo path | Anthropic code review post (checked): add "How to revert" to the PR template. | Official |
+
+Not adopted: risk wording shifts reviewer decisions (arXiv 2608.02677), but the contract schema requires `taskClass`; vendors disagree on pushy descriptions (agentskills.io vs OpenAI, 2026-09-11), so descriptions stay narrow and trigger probes measure them; the Codex validator also accepts `license`, `allowed-tools`, and `metadata` but rejects `compatibility`, and Blackfin keeps `name` and `description` only. Supporting evidence without a rule change: SkillsBench (arXiv 2602.12670 v4) found self-generated skills below the no-skill baseline, so agent-edited skills need a baseline comparison; arXiv 2608.11888 found harm when skills turn checklists into mandatory work.
+
+Limits: trigger probes were one or two runs per CLI. Grok was not signed in. The five deferred audit findings (blocked-result identity fields, out-of-criteria FAIL, shared-worktree checkpoints, two checker heuristics) were not reproduced.

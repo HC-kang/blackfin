@@ -38,7 +38,7 @@ Evidence, strongest first: observable runtime behavior, integration or end-to-en
 Rules:
 
 - Evaluate every contract criterion exactly once, with its `mandatory` value copied unchanged and no extra IDs.
-- `PASS` requires every mandatory criterion passing with available evidence. `FAIL` requires at least one failed mandatory criterion with reproduction. `BLOCKED` names the missing prerequisite or contradiction in `blockers`.
+- `PASS` requires every mandatory criterion passing with available evidence and an empty `blockers` list. `FAIL` requires at least one failed mandatory criterion with reproduction. `BLOCKED` names the missing prerequisite or contradiction in `blockers`.
 - Evidence from another revision is stale and cannot support `PASS`. A non-mandatory `FAIL` or `BLOCKED` stays visible in the criterion and summary without forcing overall failure.
 
 State checks use the shipped tool and [checkpoint protocol](checkpoint.md). For a `DIRTY` handoff, before any behavior check and again after writing the evaluation:

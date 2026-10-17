@@ -1,6 +1,6 @@
 ---
 name: blackfin-report
-description: Turn finished work into a self-contained HTML report a developer can scan, filter, and act on. Use when the user asks for an HTML or visual report, or when a result is too large to scan in chat (many items, compared metrics, several decisions); not for short answers.
+description: Turn finished work into a self-contained HTML report a developer can scan, filter, and act on. Use when the user asks for an HTML or visual report, or when a result is too large to scan in chat (many items, compared metrics, several decisions); not for short answers or app pages.
 ---
 
 # Blackfin / Report
@@ -9,7 +9,7 @@ A report earns its place only when it answers the reader's questions faster than
 
 ## The page, in this order
 
-1. Verdict: a status word with an icon, one sentence that states the outcome, and a unit bar or count of the items behind it. All of it fits on the first screen.
+1. Verdict: a status word with an icon, one sentence that states the outcome, a unit bar or count of the items behind it, and where the change lives (branch, commit, or uncommitted) with how to undo it. All of it fits on the first screen.
 2. Needs you: each open decision with its options and the consequence of each, as controls that compose a reply line the user can copy. If nothing is open, say so in one line.
 3. Overview: the three to six numbers that matter, each beside its comparison (before → after, done of total, target).
 4. Detail: the items as a table the reader can filter by status and sort, or as small multiples; anything over about eight rows gets filter chips.
@@ -25,10 +25,10 @@ Models fall back on a few default looks. The grammar names them (paragraph cards
 
 ## Wording
 
-Page text follows ASD-STE100 (Simplified Technical English) in the user's language:
+Page text follows the user's writing rules, and a writing skill for the page's language (such as `k-ste` for Korean) when one is installed. Without such rules, apply ASD-STE100 (Simplified Technical English) in the user's language:
 
 - A prose sentence is complete and carries one idea: at most 20 words in an instruction, 25 in a description. Headings, labels, chips, and table cells are short noun phrases; one that grows into a clause becomes a full sentence.
-- Keep one register across the page; in Korean, prose uses 합니다체 and labels use noun phrases, never casual or note-style endings.
+- Keep one register for body text and one for interface text. In Korean, body text is a document in 한다체; sentences in controls and hints, such as decision options and button feedback, use 합니다체; labels, button names included, are noun phrases; never use casual or note-style endings.
 - Use active voice with the actor named, one term for each thing, and one verb for each action.
 - Prose holds only what structure cannot: a reason, a trade-off, a caveat. A paragraph has at most three sentences; three or more parallel items become a list or a table.
 - Use at most one hedge per sentence, and no greetings, self-narration, filler, slogans, or exclamations.
@@ -39,6 +39,6 @@ Page text follows ASD-STE100 (Simplified Technical English) in the user's langua
 - Start from [the template](assets/report-template.html): it carries tokens, dark mode, print styles, status chips, unit bars, comparison bars, a sortable and filterable table, a decision picker, and a timeline. Replace its content; keep its structure unless the data needs another shape.
 - One file, inline CSS, JavaScript, and SVG, no network: it must render offline and print legibly. Numbers come from observed output, and unverified values say so.
 - Run `python3 <skill-directory>/scripts/report_check.py <report.html>` and fix every FAIL. Then look at the rendered page: under Orca, read the `orca-cli` browser reference, open the page (`orca tab create --url file://<absolute-path>`), and take `orca screenshot`; elsewhere, use a headless browser screenshot. Go through the render checklist at the end of the grammar item by item and fix what fails; a general impression that the page looks fine does not replace it.
-- Save it under `.blackfin/reports/<yyyy-mm-dd>-<slug>.html` unless the user names a place, and keep that directory out of commits by adding it once to the file `git rev-parse --git-path info/exclude` prints, which also works in linked worktrees. Open it for the user and give the path; under Orca, also put the path in the worktree note. Publish a public link only when the user asks.
+- Save it under `.blackfin/reports/<yyyy-mm-dd>-<slug>.html` unless the user names a place. In a Git repository, keep that directory out of commits by adding it once to the file `git rev-parse --git-path info/exclude` prints, which also works in linked worktrees. Open it for the user and give the path; under Orca, also put the path in the worktree note. Publish a public link only when the user asks.
 
 Example: a dependency audit of 30 packages becomes a verdict line with a 30-unit bar, one decision picker for the risky major upgrade, severity counts as bars, a filterable package table, and the audit commands behind disclosures.
